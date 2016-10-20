@@ -1,7 +1,9 @@
 ﻿module.exports = {
-    entry: "./src/views/index.tsx",
-    output: {
-        filename: "./public/dist/index.js",
+    entry: {
+        index: "./src/views/index.tsx",
+        login: "./src/views/login.tsx"
+    }, output: {
+        filename: "./public/dist/[name].js",
     },
 
     // Enable sourcemaps for debugging webpack's output.

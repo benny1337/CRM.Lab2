@@ -47,8 +47,8 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const ReactDOM = __webpack_require__(34);
-	const loginoptions_1 = __webpack_require__(172);
-	ReactDOM.render(React.createElement(loginoptions_1.LoginOptions, null), document.getElementById("content"));
+	const locallogin_1 = __webpack_require__(173);
+	ReactDOM.render(React.createElement(locallogin_1.LocalLogin, null), document.getElementById("content"));
 
 
 /***/ },
@@ -21419,40 +21419,37 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 172 */
+/* 172 */,
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
-	class LoginOptions extends React.Component {
+	class LocalLogin extends React.Component {
 	    render() {
-	        var style = {
-	            margin: "5px"
-	        };
-	        return (React.createElement("div", {className: "container"}, 
-	            React.createElement("div", {className: "jumbotron text-center"}, 
-	                React.createElement("h1", null, 
-	                    React.createElement("span", {className: "fa fa-lock"}), 
-	                    " CRM LAB webshop"), 
-	                React.createElement("p", null, "Login or Register with:"), 
-	                React.createElement("div", null, 
-	                    React.createElement("a", {style: style, href: "/login", className: "btn btn-default"}, 
-	                        React.createElement("span", {className: "fa fa-user"}), 
-	                        " Local Login"), 
-	                    React.createElement("a", {style: style, href: "/signup", className: "btn btn-default"}, 
-	                        React.createElement("span", {className: "fa fa-user"}), 
-	                        " Local Signup"), 
-	                    React.createElement("a", {style: style, href: "/auth/facebook", className: "btn btn-primary"}, 
-	                        React.createElement("span", {className: "fa fa-facebook"}), 
-	                        " Facebook"))), 
-	            React.createElement("div", {className: "text-center"}, 
-	                React.createElement("p", null, "this is not a live webshop. dont buy")
-	            )));
+	        return (React.createElement("div", {className: "col-sm-6 col-sm-offset-3"}, 
+	            React.createElement("h1", null, 
+	                React.createElement("span", {className: "fa fa-sign-in"}), 
+	                " Login"), 
+	            React.createElement("div", {className: "form-group"}, 
+	                React.createElement("label", null, "Email"), 
+	                React.createElement("input", {type: "text", className: "form-control", name: "email"})), 
+	            React.createElement("div", {className: "form-group"}, 
+	                React.createElement("label", null, "Password"), 
+	                React.createElement("input", {type: "password", className: "form-control", name: "password"})), 
+	            React.createElement("button", {type: "submit", className: "btn btn-warning btn-lg"}, "Login"), 
+	            React.createElement("hr", null), 
+	            React.createElement("p", null, 
+	                "Need an account? ", 
+	                React.createElement("a", {href: "/signup"}, "Signup")), 
+	            React.createElement("p", null, 
+	                "Or go ", 
+	                React.createElement("a", {href: "/"}, "home"))));
 	    }
 	}
-	exports.LoginOptions = LoginOptions;
+	exports.LocalLogin = LocalLogin;
 
 
 /***/ }
 /******/ ]);
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=login.js.map

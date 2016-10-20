@@ -31,25 +31,36 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.js" />
+    <Compile Include="app\models\user.js" />
+    <Compile Include="config\auth.js" />
+    <Compile Include="config\database.js" />
+    <Compile Include="config\passport.js" />
     <Compile Include="public\javascripts\js.js" />
     <Compile Include="routes\index.js" />
-    <Compile Include="routes\users.js" />
     <Compile Include="bin\www" />
     <Compile Include="webpack.config.js" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.styl" />
     <Content Include="README.md" />
-    <Content Include="src\components\hello.tsx" />
+    <Content Include="src\components\loginoptions.tsx" />
+    <Content Include="src\components\locallogin.tsx" />
+    <Content Include="src\views\login.tsx" />
     <Content Include="src\views\index.tsx" />
     <Content Include="tsconfig.json" />
     <Content Include="typings.json" />
+    <Content Include="views\profile.jade" />
+    <Content Include="views\signup.jade" />
+    <Content Include="views\login.jade" />
     <Content Include="views\users.jade" />
     <Content Include="views\index.jade" />
     <Content Include="views\layout.jade" />
     <Content Include="views\error.jade" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="app\" />
+    <Folder Include="app\models\" />
     <Folder Include="bin\" />
+    <Folder Include="config\" />
     <Folder Include="public\dist\" />
     <Folder Include="src\" />
     <Folder Include="public\" />

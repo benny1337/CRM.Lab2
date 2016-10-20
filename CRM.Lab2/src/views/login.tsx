@@ -1,9 +1,9 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { LoginOptions } from "../components/loginoptions";
+import { LocalLogin } from "../components/locallogin";
 
 ReactDOM.render(
-    <LoginOptions />,
+    <LocalLogin />,
     document.getElementById("content")
 );
