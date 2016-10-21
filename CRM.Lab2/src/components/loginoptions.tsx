@@ -15,8 +15,6 @@ export class LoginOptions extends React.Component<IProps, {}> {
 
                     <p>Login or Register with:</p>
                     <div>
-                        <a style={style} href="/login" className="btn btn-default"><span className="fa fa-user"></span> Local Login</a>
-                        <a style={style} href="/signup" className="btn btn-default"><span className="fa fa-user"></span> Local Signup</a>
                         <a style={style} href="/auth/facebook" className="btn btn-primary"><span className="fa fa-facebook"></span> Facebook</a>                        
                     </div>
                 </div>

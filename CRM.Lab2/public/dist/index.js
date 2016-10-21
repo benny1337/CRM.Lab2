@@ -21436,15 +21436,10 @@
 	                    " CRM LAB webshop"), 
 	                React.createElement("p", null, "Login or Register with:"), 
 	                React.createElement("div", null, 
-	                    React.createElement("a", {style: style, href: "/login", className: "btn btn-default"}, 
-	                        React.createElement("span", {className: "fa fa-user"}), 
-	                        " Local Login"), 
-	                    React.createElement("a", {style: style, href: "/signup", className: "btn btn-default"}, 
-	                        React.createElement("span", {className: "fa fa-user"}), 
-	                        " Local Signup"), 
 	                    React.createElement("a", {style: style, href: "/auth/facebook", className: "btn btn-primary"}, 
 	                        React.createElement("span", {className: "fa fa-facebook"}), 
-	                        " Facebook"))), 
+	                        " Facebook")
+	                )), 
 	            React.createElement("div", {className: "text-center"}, 
 	                React.createElement("p", null, "this is not a live webshop. dont buy")
 	            )));

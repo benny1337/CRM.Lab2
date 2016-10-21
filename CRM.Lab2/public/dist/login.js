@@ -47,7 +47,7 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const ReactDOM = __webpack_require__(34);
-	const locallogin_1 = __webpack_require__(173);
+	const locallogin_1 = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"../components/locallogin\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
 	ReactDOM.render(React.createElement(locallogin_1.LocalLogin, null), document.getElementById("content"));
 
 
@@ -21417,38 +21417,6 @@
 	
 	module.exports = ReactDOMNullInputValuePropHook;
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
-/***/ },
-/* 172 */,
-/* 173 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	class LocalLogin extends React.Component {
-	    render() {
-	        return (React.createElement("div", {className: "col-sm-6 col-sm-offset-3"}, 
-	            React.createElement("h1", null, 
-	                React.createElement("span", {className: "fa fa-sign-in"}), 
-	                " Login"), 
-	            React.createElement("div", {className: "form-group"}, 
-	                React.createElement("label", null, "Email"), 
-	                React.createElement("input", {type: "text", className: "form-control", name: "email"})), 
-	            React.createElement("div", {className: "form-group"}, 
-	                React.createElement("label", null, "Password"), 
-	                React.createElement("input", {type: "password", className: "form-control", name: "password"})), 
-	            React.createElement("button", {type: "submit", className: "btn btn-warning btn-lg"}, "Login"), 
-	            React.createElement("hr", null), 
-	            React.createElement("p", null, 
-	                "Need an account? ", 
-	                React.createElement("a", {href: "/signup"}, "Signup")), 
-	            React.createElement("p", null, 
-	                "Or go ", 
-	                React.createElement("a", {href: "/"}, "home"))));
-	    }
-	}
-	exports.LocalLogin = LocalLogin;
-
 
 /***/ }
 /******/ ]);

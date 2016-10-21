@@ -8,7 +8,6 @@ var routes = require('./routes/index');
 var passport = require('passport');
 var session = require('express-session');
 var mongoose = require('mongoose');
-
 var app = express();
 
 var configDB = require('./config/database.js');
@@ -38,6 +37,12 @@ app.use(require('stylus').middleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
+
+app.use(require('connect-flash')());
+app.use(function (req, res, next) {
+    res.locals.messages = require('express-messages')(req, res);
+    next();
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
