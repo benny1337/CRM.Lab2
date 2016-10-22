@@ -18,12 +18,9 @@ router.get('/products', function (req, res) {
 });
 
 router.get('/products/all', products.getAll, function (req, res) {
+
     res.setHeader('Content-Type', 'application/json');    
     res.send(JSON.stringify(res.products));
-});
-
-router.get('/', function (req, res) {
-    res.render('index', { header: '' });
 });
 
 // PROFILE SECTION =========================
@@ -33,6 +30,13 @@ router.get('/profile', isLoggedIn, function (req, res) {
         header: "Profile"
     });
 });
+
+router.get('/currentuser', function (req, res) {   
+    res.json(req.user);
+    //res.setHeader('Content-Type', 'application/json');
+    //res.send(JSON.stringify(req.user));
+});
+
 
 // LOGOUT ==============================
 router.get('/logout', function (req, res) {

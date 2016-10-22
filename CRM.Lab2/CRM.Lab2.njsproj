@@ -97,7 +97,10 @@
     <Content Include="bin\node.cmd" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="src\domain\actions.ts" />
     <TypeScriptCompile Include="src\domain\model.ts" />
+    <TypeScriptCompile Include="src\domain\reducer.ts" />
+    <TypeScriptCompile Include="src\domain\service.ts" />
     <TypeScriptCompile Include="typings\globals\react-dom\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\react\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\whatwg-fetch\index.d.ts" />

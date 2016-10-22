@@ -47,7 +47,7 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const ReactDOM = __webpack_require__(34);
-	const producttable_1 = __webpack_require__(173);
+	const producttable_1 = __webpack_require__(263);
 	ReactDOM.render(React.createElement(producttable_1.ProductTable, null), document.getElementById("content"));
 
 
@@ -21420,13 +21420,103 @@
 
 /***/ },
 /* 172 */,
-/* 173 */
+/* 173 */,
+/* 174 */,
+/* 175 */,
+/* 176 */,
+/* 177 */,
+/* 178 */,
+/* 179 */,
+/* 180 */,
+/* 181 */,
+/* 182 */,
+/* 183 */,
+/* 184 */,
+/* 185 */,
+/* 186 */,
+/* 187 */,
+/* 188 */,
+/* 189 */,
+/* 190 */,
+/* 191 */,
+/* 192 */,
+/* 193 */,
+/* 194 */,
+/* 195 */,
+/* 196 */,
+/* 197 */,
+/* 198 */,
+/* 199 */,
+/* 200 */,
+/* 201 */,
+/* 202 */,
+/* 203 */,
+/* 204 */,
+/* 205 */,
+/* 206 */,
+/* 207 */,
+/* 208 */,
+/* 209 */,
+/* 210 */,
+/* 211 */,
+/* 212 */,
+/* 213 */,
+/* 214 */,
+/* 215 */,
+/* 216 */,
+/* 217 */,
+/* 218 */,
+/* 219 */,
+/* 220 */,
+/* 221 */,
+/* 222 */,
+/* 223 */,
+/* 224 */,
+/* 225 */,
+/* 226 */,
+/* 227 */,
+/* 228 */,
+/* 229 */,
+/* 230 */,
+/* 231 */,
+/* 232 */,
+/* 233 */,
+/* 234 */,
+/* 235 */,
+/* 236 */,
+/* 237 */,
+/* 238 */,
+/* 239 */,
+/* 240 */,
+/* 241 */,
+/* 242 */,
+/* 243 */,
+/* 244 */,
+/* 245 */,
+/* 246 */,
+/* 247 */,
+/* 248 */,
+/* 249 */,
+/* 250 */,
+/* 251 */,
+/* 252 */,
+/* 253 */,
+/* 254 */,
+/* 255 */,
+/* 256 */,
+/* 257 */,
+/* 258 */,
+/* 259 */,
+/* 260 */,
+/* 261 */,
+/* 262 */,
+/* 263 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
-	const spinner_1 = __webpack_require__(175);
-	__webpack_require__(174);
+	const spinner_1 = __webpack_require__(264);
+	__webpack_require__(265);
 	class ProductTable extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -21463,7 +21553,47 @@
 
 
 /***/ },
-/* 174 */
+/* 264 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	class Spinner extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    componentDidMount() {
+	        this.setState({
+	            dots: ""
+	        });
+	    }
+	    dots() {
+	        if (!this.props.isLoading)
+	            return;
+	        var self = this;
+	        setTimeout(function () {
+	            var dots = self.state.dots + ".";
+	            if (dots.length > 4)
+	                dots = "";
+	            self.setState({ dots: dots });
+	        }, 100);
+	    }
+	    render() {
+	        if (!this.props.isLoading || !this.state)
+	            return null;
+	        var self = this;
+	        self.dots();
+	        return (React.createElement("div", null, 
+	            "loading", 
+	            self.state.dots));
+	    }
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Spinner;
+
+
+/***/ },
+/* 265 */
 /***/ function(module, exports) {
 
 	(function(self) {
@@ -21899,46 +22029,6 @@
 	  }
 	  self.fetch.polyfill = true
 	})(typeof self !== 'undefined' ? self : this);
-
-
-/***/ },
-/* 175 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	class Spinner extends React.Component {
-	    constructor(props) {
-	        super(props);
-	    }
-	    componentDidMount() {
-	        this.setState({
-	            dots: ""
-	        });
-	    }
-	    dots() {
-	        if (!this.props.isLoading)
-	            return;
-	        var self = this;
-	        setTimeout(function () {
-	            var dots = self.state.dots + ".";
-	            if (dots.length > 4)
-	                dots = "";
-	            self.setState({ dots: dots });
-	        }, 100);
-	    }
-	    render() {
-	        if (!this.props.isLoading || !this.state)
-	            return null;
-	        var self = this;
-	        self.dots();
-	        return (React.createElement("div", null, 
-	            "loading", 
-	            self.state.dots));
-	    }
-	}
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = Spinner;
 
 
 /***/ }
