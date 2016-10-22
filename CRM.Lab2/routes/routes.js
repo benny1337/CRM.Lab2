@@ -1,17 +1,36 @@
 ﻿var express = require('express');
 var router = express.Router();
 var passport = require('../config/passport');
+var products = require('../config/products');
 
 
 router.get('/', function (req, res) {
-    res.render('index', { title: '' });
+    res.render('index', { header: '' });
+});
+
+
+router.get('/about', function (req, res) {
+    res.render('index', { header: '' });
+});
+
+router.get('/products', function (req, res) {
+    res.render('products', { header: 'Products' });
+});
+
+router.get('/products/all', products.getAll, function (req, res) {
+    res.setHeader('Content-Type', 'application/json');    
+    res.send(JSON.stringify(res.products));
+});
+
+router.get('/', function (req, res) {
+    res.render('index', { header: '' });
 });
 
 // PROFILE SECTION =========================
 router.get('/profile', isLoggedIn, function (req, res) {
     res.render('profile', {
         user: req.user,
-        title: "Profile"
+        header: "Profile"
     });
 });
 

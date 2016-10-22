@@ -34,25 +34,29 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.js" />
+    <Compile Include="app\models\product.js" />
     <Compile Include="app\models\user.js" />
     <Compile Include="config\auth.js" />
     <Compile Include="config\database.js" />
     <Compile Include="config\passport.js" />
+    <Compile Include="config\products.js" />
     <Compile Include="public\javascripts\js.js" />
-    <Compile Include="routes\index.js" />
+    <Compile Include="routes\routes.js" />
     <Compile Include="bin\www" />
     <Compile Include="webpack.config.js" />
     <Content Include="package.json" />
-    <Content Include="public\stylesheets\style.styl" />
+    <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="src\components\producttable.tsx" />
     <Content Include="src\components\spinner.tsx" />
     <Content Include="src\components\errordisplayer.tsx" />
     <Content Include="src\components\loginoptions.tsx" />
+    <Content Include="src\views\products.tsx" />
     <Content Include="src\views\index.tsx" />
     <Content Include="tsconfig.json" />
     <Content Include="typings.json" />
     <Content Include="views\profile.jade" />
-    <Content Include="views\users.jade" />
+    <Content Include="views\products.jade" />
     <Content Include="views\index.jade" />
     <Content Include="views\layout.jade" />
     <Content Include="views\error.jade" />
