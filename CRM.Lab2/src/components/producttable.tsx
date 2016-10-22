@@ -8,7 +8,8 @@ interface IProps {
 }
 
 interface IState {
-    isLoading?: boolean
+    isLoading?: boolean;
+    products?: Model.IProduct[];
 }
 
 export class ProductTable extends React.Component<IProps, IState> {
@@ -21,11 +22,15 @@ export class ProductTable extends React.Component<IProps, IState> {
         this.setState({
             isLoading: true
         });
-
+        var self = this;
         fetch('/products/all').then(function (response) {
             return response.json();
         }).then(function (data) {
-            console.log(data);
+            var products = data as Model.IProduct[];
+            self.setState({
+                isLoading: false,
+                products: products
+            });
         }).catch(function (ex) {
 
         });;
@@ -40,7 +45,13 @@ export class ProductTable extends React.Component<IProps, IState> {
         return (
             <div>
                 <Spinner isLoading={self.state.isLoading} />
-                DEN GOA TEXTEN
+                {self.state.products.map(function (product, index) {
+                    return (
+                        <div className="product">
+                            {product.name}
+                        </div>
+                        )
+                })}
             </div>
         )
     }

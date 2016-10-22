@@ -7,3 +7,9 @@ export enum ErrorSeverity{
     Info,
     MorbidDeathFatalError,
 }
+
+export interface IProduct {
+    name: string;
+    price: number;
+    text: string;  
+}

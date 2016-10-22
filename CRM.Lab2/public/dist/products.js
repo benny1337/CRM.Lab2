@@ -21435,10 +21435,15 @@
 	        this.setState({
 	            isLoading: true
 	        });
+	        var self = this;
 	        fetch('/products/all').then(function (response) {
 	            return response.json();
 	        }).then(function (data) {
-	            console.log(data);
+	            var products = data;
+	            self.setState({
+	                isLoading: false,
+	                products: products
+	            });
 	        }).catch(function (ex) {
 	        });
 	        ;
@@ -21449,7 +21454,9 @@
 	        var self = this;
 	        return (React.createElement("div", null, 
 	            React.createElement(spinner_1.default, {isLoading: self.state.isLoading}), 
-	            "DEN GOA TEXTEN"));
+	            self.state.products.map(function (product, index) {
+	                return (React.createElement("div", {className: "product"}, product.name));
+	            })));
 	    }
 	}
 	exports.ProductTable = ProductTable;
