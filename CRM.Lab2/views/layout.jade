@@ -4,12 +4,8 @@ html
     title= header ? ("CRM LAB 2 - " + header) : "CRM LAB 2"
     link(rel='stylesheet', href='/stylesheets/style.css')      
     link(href="https://fonts.googleapis.com/css?family=Roboto", rel="stylesheet")
-  body
-    div(class="menu-wrapper")
-        a(href="/products") catalouge
-        a(href="/profile") meine pages
-        a(href="/about") about
-    div(class="main")
-        block content
-
+  body    
+    block content
+    div#content
+    script(src='/dist/index.js') 
     div(class="footer") this is not a live shop. dont buy anything

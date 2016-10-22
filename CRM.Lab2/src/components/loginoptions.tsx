@@ -18,10 +18,6 @@ export class LoginOptions extends React.Component<IProps, {}> {
                         <a style={style} href="/auth/facebook" className="btn btn-primary"><span className="fa fa-facebook"></span> Facebook</a>                        
                     </div>
                 </div>
-
-                <div className="text-center">
-                    <p>this is not a live webshop. dont buy</p>
-                </div>
             </div>
         );
     }

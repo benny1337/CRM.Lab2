@@ -47,7 +47,11 @@
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="src\components\about.tsx" />
+    <Content Include="src\components\profile.tsx" />
+    <Content Include="src\components\app.tsx" />
     <Content Include="src\components\producttable.tsx" />
+    <Content Include="src\components\home.tsx" />
     <Content Include="src\components\spinner.tsx" />
     <Content Include="src\components\errordisplayer.tsx" />
     <Content Include="src\components\loginoptions.tsx" />

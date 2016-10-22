@@ -14,7 +14,7 @@ router.get('/about', function (req, res) {
 });
 
 router.get('/products', function (req, res) {
-    res.render('products', { header: 'Products' });
+    res.render('index', { header: 'Products' });
 });
 
 router.get('/products/all', products.getAll, function (req, res) {
@@ -28,7 +28,7 @@ router.get('/', function (req, res) {
 
 // PROFILE SECTION =========================
 router.get('/profile', isLoggedIn, function (req, res) {
-    res.render('profile', {
+    res.render('index', {
         user: req.user,
         header: "Profile"
     });

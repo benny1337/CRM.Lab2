@@ -9,6 +9,8 @@ var passport = require('passport');
 var session = require('express-session');
 var mongoose = require('mongoose');
 var app = express();
+var React = require('react')
+var Router = require('react-router')
 
 var configDB = require('./config/database.js');
 mongoose.connect(configDB.url); // connect to our database
@@ -44,12 +46,12 @@ app.use(function (req, res, next) {
     next();
 });
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
-});
+//// catch 404 and forward to error handler
+//app.use(function (req, res, next) {
+//    var err = new Error('Not Found');
+//    err.status = 404;
+//    next(err);
+//});
 
 // error handlers
 

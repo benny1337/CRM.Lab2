@@ -21455,7 +21455,7 @@
 	        return (React.createElement("div", null, 
 	            React.createElement(spinner_1.default, {isLoading: self.state.isLoading}), 
 	            self.state.products.map(function (product, index) {
-	                return (React.createElement("div", {className: "product"}, product.name));
+	                return (React.createElement("div", {key: index, className: "product"}, product.name));
 	            })));
 	    }
 	}

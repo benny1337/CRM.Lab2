@@ -47,7 +47,7 @@ export class ProductTable extends React.Component<IProps, IState> {
                 <Spinner isLoading={self.state.isLoading} />
                 {self.state.products.map(function (product, index) {
                     return (
-                        <div className="product">
+                        <div key={index} className="product">
                             {product.name}
                         </div>
                         )
