@@ -26,7 +26,7 @@ export class ProductTable extends React.Component<IProps, IState> {
         fetch('/products/all').then(function (response) {
             return response.json();
         }).then(function (data) {
-            var products = data as Model.IProduct[];
+            var products = data as Model.IProduct[];            
             self.setState({
                 isLoading: false,
                 products: products
@@ -37,7 +37,7 @@ export class ProductTable extends React.Component<IProps, IState> {
     }
 
     render() {
-        if (!this.state)
+        if (!this.state || !this.state.products)
             return null;
 
         var self = this;

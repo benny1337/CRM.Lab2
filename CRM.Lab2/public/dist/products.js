@@ -21449,7 +21449,7 @@
 	        ;
 	    }
 	    render() {
-	        if (!this.state)
+	        if (!this.state || !this.state.products)
 	            return null;
 	        var self = this;
 	        return (React.createElement("div", null, 
