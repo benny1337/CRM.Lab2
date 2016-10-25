@@ -21,3 +21,24 @@ export function startRecievingUser() {
         }).catch(function (error) { });
     }
 }
+
+export const REQUESTING_PRODUCTS = "REQUESTING_PRODUCTS";
+export function requestingProducts() {
+    return { type: REQUESTING_PRODUCTS, isAsync: true } as Model.IAction
+} 
+
+export const RECIEVED_PRODUCTS = "RECIEVED_PRODUCTS";
+export function recievedProducts(prods: Model.IProduct[]) {
+    return { type: RECIEVED_PRODUCTS, isAsync: true, payload: prods } as Model.IAction
+}
+
+export const START_RECIEVING_PRODUCTS = "START_RECIEVING_PRODUCTS";
+export function startRecievingProducts() {
+    return function (dispatch: any) {
+        dispatch(requestingProducts());
+        let service = new Service.Service();
+        return service.ProductService.retrieveProducts().then(function (products) {
+            dispatch(recievedProducts(products));
+        }).catch(function (error) { });
+    }
+}

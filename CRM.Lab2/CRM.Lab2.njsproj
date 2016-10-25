@@ -8,6 +8,7 @@
     <EnableTypeScript>true</EnableTypeScript>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
+    <NameOfLastUsedPublishProfile>CRMLab220161019055137 - Web Deploy</NameOfLastUsedPublishProfile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -40,10 +41,12 @@
     <Compile Include="config\database.js" />
     <Compile Include="config\passport.js" />
     <Compile Include="config\products.js" />
+    <Compile Include="public\dist\index.js" />
     <Compile Include="public\javascripts\js.js" />
     <Compile Include="routes\routes.js" />
     <Compile Include="bin\www" />
     <Compile Include="webpack.config.js" />
+    <None Include="CRMLab220161019055137 - Web Deploy.pubxml" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
@@ -55,7 +58,6 @@
     <Content Include="src\components\spinner.tsx" />
     <Content Include="src\components\errordisplayer.tsx" />
     <Content Include="src\components\loginoptions.tsx" />
-    <Content Include="src\views\products.tsx" />
     <Content Include="src\views\index.tsx" />
     <Content Include="tsconfig.json" />
     <Content Include="typings.json" />

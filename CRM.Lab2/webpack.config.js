@@ -1,7 +1,6 @@
 ﻿module.exports = {
     entry: {
-        index: "./src/views/index.tsx",
-        products: "./src/views/products.tsx"
+        index: "./src/views/index.tsx"        
     }, output: {
         filename: "./public/dist/[name].js",
     },

@@ -8,7 +8,7 @@ import thunk from 'redux-thunk';
 
 import App from "../components/app";
 import { Home } from "../components/home";
-import { ProductTable } from "../components/producttable";
+import ProductTable from "../components/producttable";
 import { Profile } from "../components/profile";
 import { About } from "../components/about";
 

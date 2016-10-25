@@ -51,18 +51,18 @@
 	const redux_1 = __webpack_require__(235);
 	const react_redux_1 = __webpack_require__(250);
 	const reducer_1 = __webpack_require__(257);
-	const redux_thunk_1 = __webpack_require__(259);
-	const app_1 = __webpack_require__(260);
-	const home_1 = __webpack_require__(261);
-	const producttable_1 = __webpack_require__(263);
-	const profile_1 = __webpack_require__(266);
-	const about_1 = __webpack_require__(267);
+	const redux_thunk_1 = __webpack_require__(262);
+	const app_1 = __webpack_require__(263);
+	const home_1 = __webpack_require__(266);
+	const producttable_1 = __webpack_require__(267);
+	const profile_1 = __webpack_require__(268);
+	const about_1 = __webpack_require__(269);
 	let store = redux_1.createStore(reducer_1.default, redux_1.applyMiddleware(redux_thunk_1.default));
 	ReactDOM.render(React.createElement(react_redux_1.Provider, {store: store}, 
 	    React.createElement(react_router_1.Router, {history: react_router_1.browserHistory}, 
 	        React.createElement(react_router_1.Route, {path: "/", component: app_1.default}, 
 	            React.createElement(react_router_1.IndexRoute, {component: home_1.Home}), 
-	            React.createElement(react_router_1.Route, {path: "/products", component: producttable_1.ProductTable}), 
+	            React.createElement(react_router_1.Route, {path: "/products", component: producttable_1.default}), 
 	            React.createElement(react_router_1.Route, {path: "/profile", component: profile_1.Profile}), 
 	            React.createElement(react_router_1.Route, {path: "/about", component: about_1.About}))
 	    )
@@ -28579,9 +28579,10 @@
 	"use strict";
 	const redux_1 = __webpack_require__(235);
 	const Actions = __webpack_require__(258);
-	function user(state = {
+	function appstate(state = {
 	        user: null,
-	        isLoading: false
+	        isLoading: false,
+	        products: []
 	    }, action) {
 	    switch (action.type) {
 	        case Actions.REQUESTING_USER:
@@ -28593,11 +28594,20 @@
 	                isLoading: false,
 	                user: action.payload
 	            });
+	        case Actions.REQUESTING_PRODUCTS:
+	            return Object.assign({}, state, {
+	                isLoading: true,
+	            });
+	        case Actions.RECIEVED_PRODUCTS:
+	            return Object.assign({}, state, {
+	                isLoading: false,
+	                products: action.payload
+	            });
 	        default: return state;
 	    }
 	}
 	const Reducer = redux_1.combineReducers({
-	    user,
+	    appstate,
 	});
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = Reducer;
@@ -28608,7 +28618,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	const Service = __webpack_require__(268);
+	const Service = __webpack_require__(259);
 	exports.REQUESTING_USER = "REQUESTING_USER";
 	function requestingUser() {
 	    return { type: exports.REQUESTING_USER, isAsync: true };
@@ -28630,208 +28640,84 @@
 	    };
 	}
 	exports.startRecievingUser = startRecievingUser;
+	exports.REQUESTING_PRODUCTS = "REQUESTING_PRODUCTS";
+	function requestingProducts() {
+	    return { type: exports.REQUESTING_PRODUCTS, isAsync: true };
+	}
+	exports.requestingProducts = requestingProducts;
+	exports.RECIEVED_PRODUCTS = "RECIEVED_PRODUCTS";
+	function recievedProducts(prods) {
+	    return { type: exports.RECIEVED_PRODUCTS, isAsync: true, payload: prods };
+	}
+	exports.recievedProducts = recievedProducts;
+	exports.START_RECIEVING_PRODUCTS = "START_RECIEVING_PRODUCTS";
+	function startRecievingProducts() {
+	    return function (dispatch) {
+	        dispatch(requestingProducts());
+	        let service = new Service.Service();
+	        return service.ProductService.retrieveProducts().then(function (products) {
+	            dispatch(recievedProducts(products));
+	        }).catch(function (error) { });
+	    };
+	}
+	exports.startRecievingProducts = startRecievingProducts;
 
 
 /***/ },
 /* 259 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-	
-	exports.__esModule = true;
-	function createThunkMiddleware(extraArgument) {
-	  return function (_ref) {
-	    var dispatch = _ref.dispatch;
-	    var getState = _ref.getState;
-	    return function (next) {
-	      return function (action) {
-	        if (typeof action === 'function') {
-	          return action(dispatch, getState, extraArgument);
-	        }
-	
-	        return next(action);
-	      };
-	    };
-	  };
+	"use strict";
+	__webpack_require__(260);
+	const Model = __webpack_require__(261);
+	class ProductService {
+	    retrieveProducts() {
+	        return new Promise((resolve, reject) => {
+	            fetch('/products/all').then(function (response) {
+	                return response.json();
+	            }).then(function (data) {
+	                resolve(data);
+	            }).catch(function (ex) {
+	                reject(ex);
+	            });
+	        });
+	    }
 	}
-	
-	var thunk = createThunkMiddleware();
-	thunk.withExtraArgument = createThunkMiddleware;
-	
-	exports['default'] = thunk;
+	class UserService {
+	    retrieveUser() {
+	        return new Promise((resolve, reject) => {
+	            fetch('/currentuser', {
+	                credentials: 'same-origin'
+	            }).then(function (response) {
+	                return response.text();
+	            }).then(function (text) {
+	                if (text == "")
+	                    resolve();
+	                var data = JSON.parse(text);
+	                var user = data;
+	                setTimeout(function () { resolve(user); }, 3000);
+	            }).catch(function (ex) {
+	                var err = {
+	                    message: ex,
+	                    severity: Model.ErrorSeverity.MorbidDeathFatalError
+	                };
+	                reject(err);
+	            });
+	            ;
+	        });
+	    }
+	}
+	class Service {
+	    constructor() {
+	        this.UserService = new UserService();
+	        this.ProductService = new ProductService();
+	    }
+	}
+	exports.Service = Service;
+
 
 /***/ },
 /* 260 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	const Actions = __webpack_require__(258);
-	const react_router_1 = __webpack_require__(172);
-	const react_redux_1 = __webpack_require__(250);
-	const loginoptions_1 = __webpack_require__(262);
-	const spinner_1 = __webpack_require__(264);
-	class AppDef extends React.Component {
-	    constructor(props) {
-	        super(props);
-	    }
-	    componentDidMount() {
-	        this.props.initLoadUser();
-	    }
-	    render() {
-	        var self = this;
-	        return (React.createElement("div", null, 
-	            React.createElement("div", {className: "menu-wrapper"}, 
-	                React.createElement(react_router_1.Link, {to: "/"}, "Home"), 
-	                React.createElement(react_router_1.Link, {to: "/products"}, "catalouge"), 
-	                React.createElement(react_router_1.Link, {to: "/profile"}, "meine pages"), 
-	                React.createElement(react_router_1.Link, {to: "/about"}, "about"), 
-	                React.createElement(spinner_1.default, {isLoading: this.props.isLoading}), 
-	                self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" : React.createElement(loginoptions_1.LoginOptions, null)), 
-	            React.createElement("div", null, this.props.children)));
-	    }
-	}
-	const mapStateToProps = (state) => {
-	    return {
-	        user: state.user.user,
-	        isLoading: state.user.isLoading,
-	    };
-	};
-	const mapDispatchToProps = (dispatch) => {
-	    return {
-	        initLoadUser: () => {
-	            dispatch(Actions.startRecievingUser());
-	        },
-	    };
-	};
-	const App = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(AppDef);
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = App;
-
-
-/***/ },
-/* 261 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	class Home extends React.Component {
-	    constructor(props) {
-	        super(props);
-	    }
-	    render() {
-	        return (React.createElement("div", null, "this is the index"));
-	    }
-	}
-	exports.Home = Home;
-
-
-/***/ },
-/* 262 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	class LoginOptions extends React.Component {
-	    render() {
-	        var style = {
-	            margin: "5px"
-	        };
-	        return (React.createElement("span", null, 
-	            "Login or Register with ", 
-	            React.createElement("a", {style: style, href: "/auth/facebook", className: "btn btn-primary"}, 
-	                React.createElement("span", {className: "fa fa-facebook"}), 
-	                " Facebook")));
-	    }
-	}
-	exports.LoginOptions = LoginOptions;
-
-
-/***/ },
-/* 263 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	const spinner_1 = __webpack_require__(264);
-	__webpack_require__(265);
-	class ProductTable extends React.Component {
-	    constructor(props) {
-	        super(props);
-	    }
-	    componentDidMount() {
-	        this.setState({
-	            isLoading: true
-	        });
-	        var self = this;
-	        fetch('/products/all').then(function (response) {
-	            return response.json();
-	        }).then(function (data) {
-	            var products = data;
-	            self.setState({
-	                isLoading: false,
-	                products: products
-	            });
-	        }).catch(function (ex) {
-	        });
-	        ;
-	    }
-	    render() {
-	        if (!this.state || !this.state.products)
-	            return null;
-	        var self = this;
-	        return (React.createElement("div", null, 
-	            React.createElement(spinner_1.default, {isLoading: self.state.isLoading}), 
-	            self.state.products.map(function (product, index) {
-	                return (React.createElement("div", {key: index, className: "product"}, product.name));
-	            })));
-	    }
-	}
-	exports.ProductTable = ProductTable;
-
-
-/***/ },
-/* 264 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	class Spinner extends React.Component {
-	    constructor(props) {
-	        super(props);
-	    }
-	    componentDidMount() {
-	        this.setState({
-	            dots: ""
-	        });
-	    }
-	    dots() {
-	        if (!this.props.isLoading)
-	            return;
-	        var self = this;
-	        setTimeout(function () {
-	            var dots = self.state.dots + ".";
-	            if (dots.length > 4)
-	                dots = "";
-	            self.setState({ dots: dots });
-	        }, 100);
-	    }
-	    render() {
-	        if (!this.props.isLoading || !this.state)
-	            return null;
-	        var self = this;
-	        self.dots();
-	        return (React.createElement("div", null, 
-	            "loading", 
-	            self.state.dots));
-	    }
-	}
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = Spinner;
-
-
-/***/ },
-/* 265 */
 /***/ function(module, exports) {
 
 	(function(self) {
@@ -29270,12 +29156,228 @@
 
 
 /***/ },
+/* 261 */
+/***/ function(module, exports) {
+
+	"use strict";
+	(function (ErrorSeverity) {
+	    ErrorSeverity[ErrorSeverity["Info"] = 0] = "Info";
+	    ErrorSeverity[ErrorSeverity["MorbidDeathFatalError"] = 1] = "MorbidDeathFatalError";
+	})(exports.ErrorSeverity || (exports.ErrorSeverity = {}));
+	var ErrorSeverity = exports.ErrorSeverity;
+
+
+/***/ },
+/* 262 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	function createThunkMiddleware(extraArgument) {
+	  return function (_ref) {
+	    var dispatch = _ref.dispatch;
+	    var getState = _ref.getState;
+	    return function (next) {
+	      return function (action) {
+	        if (typeof action === 'function') {
+	          return action(dispatch, getState, extraArgument);
+	        }
+	
+	        return next(action);
+	      };
+	    };
+	  };
+	}
+	
+	var thunk = createThunkMiddleware();
+	thunk.withExtraArgument = createThunkMiddleware;
+	
+	exports['default'] = thunk;
+
+/***/ },
+/* 263 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const Actions = __webpack_require__(258);
+	const react_router_1 = __webpack_require__(172);
+	const react_redux_1 = __webpack_require__(250);
+	const loginoptions_1 = __webpack_require__(264);
+	const spinner_1 = __webpack_require__(265);
+	class AppDef extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    componentDidMount() {
+	        this.props.initLoadUser();
+	    }
+	    render() {
+	        var self = this;
+	        return (React.createElement("div", null, 
+	            React.createElement("div", {className: "menu-wrapper"}, 
+	                React.createElement(react_router_1.Link, {to: "/"}, "Home"), 
+	                React.createElement(react_router_1.Link, {to: "/products"}, "catalouge"), 
+	                React.createElement(react_router_1.Link, {to: "/profile"}, "meine pages"), 
+	                React.createElement(react_router_1.Link, {to: "/about"}, "about"), 
+	                React.createElement(spinner_1.default, {isLoading: this.props.isLoading}), 
+	                self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" : React.createElement(loginoptions_1.LoginOptions, null)), 
+	            React.createElement("div", null, this.props.children)));
+	    }
+	}
+	const mapStateToProps = (state) => {
+	    return {
+	        user: state.appstate.user,
+	        isLoading: state.appstate.isLoading,
+	    };
+	};
+	const mapDispatchToProps = (dispatch) => {
+	    return {
+	        initLoadUser: () => {
+	            dispatch(Actions.startRecievingUser());
+	        },
+	    };
+	};
+	const App = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(AppDef);
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = App;
+
+
+/***/ },
+/* 264 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	class LoginOptions extends React.Component {
+	    render() {
+	        var style = {
+	            margin: "5px"
+	        };
+	        return (React.createElement("span", null, 
+	            "Login or Register with ", 
+	            React.createElement("a", {style: style, href: "/auth/facebook", className: "btn btn-primary"}, 
+	                React.createElement("span", {className: "fa fa-facebook"}), 
+	                " Facebook")));
+	    }
+	}
+	exports.LoginOptions = LoginOptions;
+
+
+/***/ },
+/* 265 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	class Spinner extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    componentDidMount() {
+	        this.setState({
+	            dots: ""
+	        });
+	    }
+	    dots() {
+	        if (!this.props.isLoading)
+	            return;
+	        var self = this;
+	        setTimeout(function () {
+	            var dots = self.state.dots + ".";
+	            if (dots.length > 4)
+	                dots = "";
+	            self.setState({ dots: dots });
+	        }, 100);
+	    }
+	    render() {
+	        if (!this.props.isLoading || !this.state)
+	            return null;
+	        var self = this;
+	        self.dots();
+	        return (React.createElement("div", null, 
+	            "loading", 
+	            self.state.dots));
+	    }
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Spinner;
+
+
+/***/ },
 /* 266 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
-	__webpack_require__(265);
+	class Home extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    render() {
+	        return (React.createElement("div", null, "this is the index"));
+	    }
+	}
+	exports.Home = Home;
+
+
+/***/ },
+/* 267 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const Actions = __webpack_require__(258);
+	const react_redux_1 = __webpack_require__(250);
+	const spinner_1 = __webpack_require__(265);
+	__webpack_require__(260);
+	class ProductTableDef extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    componentDidMount() {
+	        this.props.loadProducts();
+	    }
+	    render() {
+	        var self = this;
+	        return (React.createElement("div", null, 
+	            React.createElement(spinner_1.default, {isLoading: self.props.isLoading}), 
+	            self.props.products.map(function (product, index) {
+	                return (React.createElement("div", {key: index, className: "product"}, 
+	                    React.createElement("h2", null, product.Name), 
+	                    React.createElement("img", {src: product.ImgUrl, width: "100"}), 
+	                    product.Price, 
+	                    " :-", 
+	                    React.createElement("p", null, product.Text)));
+	            })));
+	    }
+	}
+	const mapStateToProps = (state) => {
+	    return {
+	        products: state.appstate.products,
+	        isLoading: state.appstate.isLoading,
+	    };
+	};
+	const mapDispatchToProps = (dispatch) => {
+	    return {
+	        loadProducts: () => {
+	            dispatch(Actions.startRecievingProducts());
+	        },
+	    };
+	};
+	const ProductTable = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(ProductTableDef);
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = ProductTable;
+
+
+/***/ },
+/* 268 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	__webpack_require__(260);
 	class Profile extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -29288,12 +29390,12 @@
 
 
 /***/ },
-/* 267 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
-	__webpack_require__(265);
+	__webpack_require__(260);
 	class About extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -29303,57 +29405,6 @@
 	    }
 	}
 	exports.About = About;
-
-
-/***/ },
-/* 268 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	__webpack_require__(265);
-	const Model = __webpack_require__(269);
-	class UserService {
-	    retrieveUser() {
-	        return new Promise((resolve, reject) => {
-	            fetch('/currentuser', {
-	                credentials: 'same-origin'
-	            }).then(function (response) {
-	                return response.text();
-	            }).then(function (text) {
-	                if (text == "")
-	                    resolve();
-	                var data = JSON.parse(text);
-	                var user = data;
-	                setTimeout(function () { resolve(user); }, 3000);
-	            }).catch(function (ex) {
-	                var err = {
-	                    message: ex,
-	                    severity: Model.ErrorSeverity.MorbidDeathFatalError
-	                };
-	                reject(err);
-	            });
-	            ;
-	        });
-	    }
-	}
-	class Service {
-	    constructor() {
-	        this.UserService = new UserService();
-	    }
-	}
-	exports.Service = Service;
-
-
-/***/ },
-/* 269 */
-/***/ function(module, exports) {
-
-	"use strict";
-	(function (ErrorSeverity) {
-	    ErrorSeverity[ErrorSeverity["Info"] = 0] = "Info";
-	    ErrorSeverity[ErrorSeverity["MorbidDeathFatalError"] = 1] = "MorbidDeathFatalError";
-	})(exports.ErrorSeverity || (exports.ErrorSeverity = {}));
-	var ErrorSeverity = exports.ErrorSeverity;
 
 
 /***/ }

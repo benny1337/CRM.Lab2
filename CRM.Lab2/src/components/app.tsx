@@ -44,8 +44,8 @@ class AppDef extends React.Component<IProps, {}> {
 
 const mapStateToProps = (state: any) => {    
     return {        
-        user: state.user.user,
-        isLoading: state.user.isLoading,        
+        user: state.appstate.user,
+        isLoading: state.appstate.isLoading,        
     }
 }
 

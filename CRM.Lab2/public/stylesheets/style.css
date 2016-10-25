@@ -30,3 +30,8 @@ a {
   background-color: #efefef;
   text-align: center;
 }
+.product{
+    margin: 10px;
+    padding: 20px;
+    border: 1px solid #ccc;
+}

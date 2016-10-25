@@ -20,9 +20,11 @@ export interface IUser {
     }
 }
 export interface IProduct {
-    name: string;
-    price: number;
-    text: string;
+    Name: string;
+    Price: number;
+    Text: string;
+    Id: string;
+    ImgUrl: string;
 }
 export interface IAction {
     type: string;

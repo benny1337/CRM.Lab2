@@ -246,3 +246,5 @@ ModelManifest.xml
 .fake/
 /authexample/easy-node-authentication/
 /CRM.Lab2/dist
+/CRM.Lab2/CRMLab220161019055137 - Web Deploy.pubxml
+/CRM.Lab2.ProductWebJob/Properties/PublishProfiles/CRMLab220161019055137 - Web Deploy.pubxml

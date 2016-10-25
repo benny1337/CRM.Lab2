@@ -1,6 +1,20 @@
 ﻿import 'whatwg-fetch';
 import * as Model from './model';
 
+class ProductService {
+    retrieveProducts() {
+        return new Promise<Model.IProduct[]>((resolve, reject) => {
+            fetch('/products/all').then(function (response) {
+                return response.json();
+            }).then(function (data) {
+                resolve(data as Model.IProduct[]);                
+            }).catch(function (ex) {
+                reject(ex);
+            });
+        });
+    }
+}
+
 class UserService {
     retrieveUser() {
         return new Promise<Model.IUser>((resolve, reject) => {
@@ -27,4 +41,5 @@ class UserService {
 
 export class Service {
     UserService = new UserService();
+    ProductService = new ProductService();
 }
