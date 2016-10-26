@@ -50,6 +50,8 @@
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="src\components\imagewithmodal.tsx" />
+    <Content Include="src\components\ImageCSVSlider.tsx" />
     <Content Include="src\components\productdetail.tsx" />
     <Content Include="src\components\about.tsx" />
     <Content Include="src\components\profile.tsx" />

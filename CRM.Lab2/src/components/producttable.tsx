@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import Spinner from './spinner';
 import { Link } from 'react-router';
 import 'whatwg-fetch';
+import { browserHistory } from 'react-router'
 
 interface IProps {
     isLoading: boolean;
@@ -23,20 +24,24 @@ class ProductTableDef extends React.Component<IProps, {}> {
         this.props.loadProducts();
     }
 
+    onnavigate(url: string) {        
+        browserHistory.push(url);
+    }
+
     render() {
         var self = this;        
         return (
             <div>                
                 <Spinner isLoading={self.props.isLoading} />
-                {self.props.products.map(function (product, index) {
-                    var url = "/product/" + product.SeoName;
-                    return (                        
-                        <Link to={url} key={index} className="product">
+                {self.props.products.map(function (product, index) {    
+                    var url = "/product/" + product.SeoName;                
+                    return (
+                        <div key={index} className="product" onClick={() => self.onnavigate(url)}>
                             <h2>{product.Name}</h2>
                             <img src={product.ImgUrl} width="100" />
                             {product.Price}:-
                             {product.Supplier}                            
-                        </Link>
+                        </div>
                     )
                 })}
             </div>

@@ -1,8 +1,9 @@
-body {  
+html, body {  
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
   background-color: #fff;
   padding: 0px;
   margin: 0px;
+  height: 100%;
 }
 a {
   color: #00b7ff;
@@ -20,18 +21,25 @@ a {
 .main{
     padding: 50px;
 }
-
-.footer {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: 1rem;
+.content{
+  min-height: 100%;  
+  margin-bottom: -60px; 
+}
+.content:after {
+  content: "";
+  display: block;
+}
+.footer, .content:after {
+  height: 60px; 
+}
+.footer {  
   background-color: #efefef;
   text-align: center;
+  padding-top: 20px;
 }
 .product{
     margin: 10px;
     padding: 20px;
     border: 1px solid #ccc;
+    cursor:pointer;
 }

@@ -21,18 +21,18 @@ class AppDef extends React.Component<IProps, {}> {
     componentDidMount() {
         this.props.initLoadUser();
     }
-        
+
     render() {
         var self = this;
         return (
-            <div>                
+            <div>
                 <div className="menu-wrapper">
                     <Link to="/">Home</Link>
                     <Link to="/products">catalouge</Link>
                     <Link to="/profile">meine pages</Link>
                     <Link to="/about">about</Link>
 
-                    <Spinner isLoading={this.props.isLoading} />{self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" :  <LoginOptions />}
+                    <Spinner isLoading={this.props.isLoading} />{self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" : <LoginOptions />}
                 </div>
                 <div>
                     {this.props.children}
@@ -42,10 +42,10 @@ class AppDef extends React.Component<IProps, {}> {
     }
 }
 
-const mapStateToProps = (state: any) => {    
-    return {        
+const mapStateToProps = (state: any) => {
+    return {
         user: state.appstate.user,
-        isLoading: state.appstate.isLoading,        
+        isLoading: state.appstate.isLoading,
     }
 }
 

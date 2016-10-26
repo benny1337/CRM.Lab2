@@ -14,6 +14,18 @@ class ProductService {
             });
         });
     }
+    retrieveProduct(seoname: string) {
+        return new Promise<Model.IProduct>((resolve, reject) => {
+            fetch('/products/one/' + seoname).then(function (response) {
+                return response.json();
+            }).then(function (data) {
+                resolve(data as Model.IProduct);
+            }).catch(function (ex) {
+                console.log(ex);
+                reject(ex);
+            });
+        });
+    }
 }
 
 class UserService {

@@ -28584,6 +28584,7 @@
 	function appstate(state = {
 	        user: null,
 	        isLoading: false,
+	        currentProduct: null,
 	        products: []
 	    }, action) {
 	    switch (action.type) {
@@ -28604,6 +28605,16 @@
 	            return Object.assign({}, state, {
 	                isLoading: false,
 	                products: action.payload
+	            });
+	        case Actions.REQUESTING_A_PRODUCT:
+	            return Object.assign({}, state, {
+	                isLoading: true,
+	                currentProduct: null
+	            });
+	        case Actions.RECIEVED_A_PRODUCT:
+	            return Object.assign({}, state, {
+	                isLoading: false,
+	                currentProduct: action.payload
 	            });
 	        default: return state;
 	    }
@@ -28663,6 +28674,27 @@
 	    };
 	}
 	exports.startRecievingProducts = startRecievingProducts;
+	exports.REQUESTING_A_PRODUCT = "REQUESTING_A_PRODUCT";
+	function requestingProduct() {
+	    return { type: exports.REQUESTING_A_PRODUCT, isAsync: true };
+	}
+	exports.requestingProduct = requestingProduct;
+	exports.RECIEVED_A_PRODUCT = "RECIEVED_A_PRODUCT";
+	function recievedProduct(prod) {
+	    return { type: exports.RECIEVED_A_PRODUCT, isAsync: true, payload: prod };
+	}
+	exports.recievedProduct = recievedProduct;
+	exports.START_RECIEVING_A_PRODUCT = "START_RECIEVING_A_PRODUCT";
+	function startRecievingProduct(seoname) {
+	    return function (dispatch) {
+	        dispatch(requestingProduct());
+	        let service = new Service.Service();
+	        return service.ProductService.retrieveProduct(seoname).then(function (product) {
+	            dispatch(recievedProduct(product));
+	        }).catch(function (error) { });
+	    };
+	}
+	exports.startRecievingProduct = startRecievingProduct;
 
 
 /***/ },
@@ -28676,6 +28708,18 @@
 	    retrieveProducts() {
 	        return new Promise((resolve, reject) => {
 	            fetch('/products/all').then(function (response) {
+	                return response.json();
+	            }).then(function (data) {
+	                resolve(data);
+	            }).catch(function (ex) {
+	                console.log(ex);
+	                reject(ex);
+	            });
+	        });
+	    }
+	    retrieveProduct(seoname) {
+	        return new Promise((resolve, reject) => {
+	            fetch('/products/one/' + seoname).then(function (response) {
 	                return response.json();
 	            }).then(function (data) {
 	                resolve(data);
@@ -29334,8 +29378,8 @@
 	const Actions = __webpack_require__(258);
 	const react_redux_1 = __webpack_require__(250);
 	const spinner_1 = __webpack_require__(265);
-	const react_router_1 = __webpack_require__(172);
 	__webpack_require__(260);
+	const react_router_1 = __webpack_require__(172);
 	class ProductTableDef extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -29343,13 +29387,16 @@
 	    componentDidMount() {
 	        this.props.loadProducts();
 	    }
+	    onnavigate(url) {
+	        react_router_1.browserHistory.push(url);
+	    }
 	    render() {
 	        var self = this;
 	        return (React.createElement("div", null, 
 	            React.createElement(spinner_1.default, {isLoading: self.props.isLoading}), 
 	            self.props.products.map(function (product, index) {
 	                var url = "/product/" + product.SeoName;
-	                return (React.createElement(react_router_1.Link, {to: url, key: index, className: "product"}, 
+	                return (React.createElement("div", {key: index, className: "product", onClick: () => self.onnavigate(url)}, 
 	                    React.createElement("h2", null, product.Name), 
 	                    React.createElement("img", {src: product.ImgUrl, width: "100"}), 
 	                    product.Price, 
@@ -29382,29 +29429,38 @@
 
 	"use strict";
 	const React = __webpack_require__(1);
+	const Actions = __webpack_require__(258);
 	const react_redux_1 = __webpack_require__(250);
-	const Enumerable = __webpack_require__(271);
+	//import * as Enumerable from "linq";
+	const imagecsvslider_1 = __webpack_require__(290);
 	class ProductDetailDef extends React.Component {
 	    constructor(props) {
 	        super(props);
 	    }
-	    render() {
+	    componentDidMount() {
 	        var productname = this.props.params.productname;
-	        if (!productname)
+	        this.props.loadProduct(productname);
+	    }
+	    render() {
+	        if (!this.props.product)
 	            return null;
-	        var prod = Enumerable.from(this.props.products).where(x => x.SeoName == productname).first();
 	        return (React.createElement("div", null, 
-	            prod.Name, 
-	            React.createElement("img", {src: prod.ImgUrl})));
+	            this.props.product.Name, 
+	            React.createElement("img", {src: this.props.product.ImgUrl}), 
+	            React.createElement(imagecsvslider_1.ImageCSVSlider, {csvimages: this.props.product.OtherImagesCSV})));
 	    }
 	}
 	const mapStateToProps = (state) => {
 	    return {
-	        products: state.appstate.products,
+	        product: state.appstate.currentProduct,
 	    };
 	};
 	const mapDispatchToProps = (dispatch) => {
-	    return {};
+	    return {
+	        loadProduct: (seoname) => {
+	            dispatch(Actions.startRecievingProduct(seoname));
+	        },
+	    };
 	};
 	const ProductDetail = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(ProductDetailDef);
 	Object.defineProperty(exports, "__esModule", { value: true });
@@ -29448,3034 +29504,4283 @@
 
 
 /***/ },
-/* 271 */
+/* 271 */,
+/* 272 */,
+/* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*--------------------------------------------------------------------------
-	 * linq.js - LINQ for JavaScript
-	 * ver 3.0.4-Beta5 (Jun. 20th, 2013)
-	 *
-	 * created and maintained by neuecc <ils@neue.cc>
-	 * licensed under MIT License
-	 * http://linqjs.codeplex.com/
-	 *------------------------------------------------------------------------*/
+	'use strict';
 	
-	(function (root, undefined) {
-	    // ReadOnly Function
-	    var Functions = {
-	        Identity: function (x) { return x; },
-	        True: function () { return true; },
-	        Blank: function () { }
-	    };
-	
-	    // const Type
-	    var Types = {
-	        Boolean: typeof true,
-	        Number: typeof 0,
-	        String: typeof "",
-	        Object: typeof {},
-	        Undefined: typeof undefined,
-	        Function: typeof function () { }
-	    };
-	
-	    // createLambda cache
-	    var funcCache = { "": Functions.Identity };
-	
-	    // private utility methods
-	    var Utils = {
-	        // Create anonymous function from lambda expression string
-	        createLambda: function (expression) {
-	            if (expression == null) return Functions.Identity;
-	            if (typeof expression === Types.String) {
-	                // get from cache
-	                var f = funcCache[expression];
-	                if (f != null) {
-	                    return f;
-	                }
-	
-	                if (expression.indexOf("=>") === -1) {
-	                    var regexp = new RegExp("[$]+", "g");
-	
-	                    var maxLength = 0;
-	                    var match;
-	                    while ((match = regexp.exec(expression)) != null) {
-	                        var paramNumber = match[0].length;
-	                        if (paramNumber > maxLength) {
-	                            maxLength = paramNumber;
-	                        }
-	                    }
-	
-	                    var argArray = [];
-	                    for (var i = 1; i <= maxLength; i++) {
-	                        var dollar = "";
-	                        for (var j = 0; j < i; j++) {
-	                            dollar += "$";
-	                        }
-	                        argArray.push(dollar);
-	                    }
-	
-	                    var args = Array.prototype.join.call(argArray, ",");
-	
-	                    f = new Function(args, "return " + expression);
-	                    funcCache[expression] = f;
-	                    return f;
-	                }
-	                else {
-	                    var expr = expression.match(/^[(\s]*([^()]*?)[)\s]*=>(.*)/);
-	                    f = new Function(expr[1], "return " + expr[2]);
-	                    funcCache[expression] = f;
-	                    return f;
-	                }
-	            }
-	            return expression;
-	        },
-	
-	        isIEnumerable: function (obj) {
-	            if (typeof Enumerator !== Types.Undefined) {
-	                try {
-	                    new Enumerator(obj); // check JScript(IE)'s Enumerator
-	                    return true;
-	                }
-	                catch (e) { }
-	            }
-	
-	            return false;
-	        },
-	
-	        // IE8's defineProperty is defined but cannot use, therefore check defineProperties
-	        defineProperty: (Object.defineProperties != null)
-	            ? function (target, methodName, value) {
-	                Object.defineProperty(target, methodName, {
-	                    enumerable: false,
-	                    configurable: true,
-	                    writable: true,
-	                    value: value
-	                })
-	            }
-	            : function (target, methodName, value) {
-	                target[methodName] = value;
-	            },
-	
-	        compare: function (a, b) {
-	            return (a === b) ? 0
-	                 : (a > b) ? 1
-	                 : -1;
-	        },
-	
-	        dispose: function (obj) {
-	            if (obj != null) obj.dispose();
-	        }
-	    };
-	
-	    // IEnumerator State
-	    var State = { Before: 0, Running: 1, After: 2 };
-	
-	    // "Enumerator" is conflict JScript's "Enumerator"
-	    var IEnumerator = function (initialize, tryGetNext, dispose) {
-	        var yielder = new Yielder();
-	        var state = State.Before;
-	
-	        this.current = yielder.current;
-	
-	        this.moveNext = function () {
-	            try {
-	                switch (state) {
-	                    case State.Before:
-	                        state = State.Running;
-	                        initialize();
-	                        // fall through
-	                    case State.Running:
-	                        if (tryGetNext.apply(yielder)) {
-	                            return true;
-	                        }
-	                        else {
-	                            this.dispose();
-	                            return false;
-	                        }
-	                    case State.After:
-	                        return false;
-	                }
-	            }
-	            catch (e) {
-	                this.dispose();
-	                throw e;
-	            }
-	        };
-	
-	        this.dispose = function () {
-	            if (state != State.Running) return;
-	
-	            try {
-	                dispose();
-	            }
-	            finally {
-	                state = State.After;
-	            }
-	        };
-	    };
-	
-	    // for tryGetNext
-	    var Yielder = function () {
-	        var current = null;
-	        this.current = function () { return current; };
-	        this.yieldReturn = function (value) {
-	            current = value;
-	            return true;
-	        };
-	        this.yieldBreak = function () {
-	            return false;
-	        };
-	    };
-	
-	    // Enumerable constuctor
-	    var Enumerable = function (getEnumerator) {
-	        this.getEnumerator = getEnumerator;
-	    };
-	
-	    // Utility
-	
-	    Enumerable.Utils = {}; // container
-	
-	    Enumerable.Utils.createLambda = function (expression) {
-	        return Utils.createLambda(expression);
-	    };
-	
-	    Enumerable.Utils.createEnumerable = function (getEnumerator) {
-	        return new Enumerable(getEnumerator);
-	    };
-	
-	    Enumerable.Utils.createEnumerator = function (initialize, tryGetNext, dispose) {
-	        return new IEnumerator(initialize, tryGetNext, dispose);
-	    };
-	
-	    Enumerable.Utils.extendTo = function (type) {
-	        var typeProto = type.prototype;
-	        var enumerableProto;
-	
-	        if (type === Array) {
-	            enumerableProto = ArrayEnumerable.prototype;
-	            Utils.defineProperty(typeProto, "getSource", function () {
-	                return this;
-	            });
-	        }
-	        else {
-	            enumerableProto = Enumerable.prototype;
-	            Utils.defineProperty(typeProto, "getEnumerator", function () {
-	                return Enumerable.from(this).getEnumerator();
-	            });
-	        }
-	
-	        for (var methodName in enumerableProto) {
-	            var func = enumerableProto[methodName];
-	
-	            // already extended
-	            if (typeProto[methodName] == func) continue;
-	
-	            // already defined(example Array#reverse/join/forEach...)
-	            if (typeProto[methodName] != null) {
-	                methodName = methodName + "ByLinq";
-	                if (typeProto[methodName] == func) continue; // recheck
-	            }
-	
-	            if (func instanceof Function) {
-	                Utils.defineProperty(typeProto, methodName, func);
-	            }
-	        }
-	    };
-	
-	    // Generator
-	
-	    Enumerable.choice = function () // variable argument
-	    {
-	        var args = arguments;
-	
-	        return new Enumerable(function () {
-	            return new IEnumerator(
-	                function () {
-	                    args = (args[0] instanceof Array) ? args[0]
-	                        : (args[0].getEnumerator != null) ? args[0].toArray()
-	                        : args;
-	                },
-	                function () {
-	                    return this.yieldReturn(args[Math.floor(Math.random() * args.length)]);
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.cycle = function () // variable argument
-	    {
-	        var args = arguments;
-	
-	        return new Enumerable(function () {
-	            var index = 0;
-	            return new IEnumerator(
-	                function () {
-	                    args = (args[0] instanceof Array) ? args[0]
-	                        : (args[0].getEnumerator != null) ? args[0].toArray()
-	                        : args;
-	                },
-	                function () {
-	                    if (index >= args.length) index = 0;
-	                    return this.yieldReturn(args[index++]);
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.empty = function () {
-	        return new Enumerable(function () {
-	            return new IEnumerator(
-	                Functions.Blank,
-	                function () { return false; },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.from = function (obj) {
-	        if (obj == null) {
-	            return Enumerable.empty();
-	        }
-	        if (obj instanceof Enumerable) {
-	            return obj;
-	        }
-	        if (typeof obj == Types.Number || typeof obj == Types.Boolean) {
-	            return Enumerable.repeat(obj, 1);
-	        }
-	        if (typeof obj == Types.String) {
-	            return new Enumerable(function () {
-	                var index = 0;
-	                return new IEnumerator(
-	                    Functions.Blank,
-	                    function () {
-	                        return (index < obj.length) ? this.yieldReturn(obj.charAt(index++)) : false;
-	                    },
-	                    Functions.Blank);
-	            });
-	        }
-	        if (typeof obj != Types.Function) {
-	            // array or array like object
-	            if (typeof obj.length == Types.Number) {
-	                return new ArrayEnumerable(obj);
-	            }
-	
-	            // JScript's IEnumerable
-	            if (!(obj instanceof Object) && Utils.isIEnumerable(obj)) {
-	                return new Enumerable(function () {
-	                    var isFirst = true;
-	                    var enumerator;
-	                    return new IEnumerator(
-	                        function () { enumerator = new Enumerator(obj); },
-	                        function () {
-	                            if (isFirst) isFirst = false;
-	                            else enumerator.moveNext();
-	
-	                            return (enumerator.atEnd()) ? false : this.yieldReturn(enumerator.item());
-	                        },
-	                        Functions.Blank);
-	                });
-	            }
-	
-	            // WinMD IIterable<T>
-	            if (typeof Windows === Types.Object && typeof obj.first === Types.Function) {
-	                return new Enumerable(function () {
-	                    var isFirst = true;
-	                    var enumerator;
-	                    return new IEnumerator(
-	                        function () { enumerator = obj.first(); },
-	                        function () {
-	                            if (isFirst) isFirst = false;
-	                            else enumerator.moveNext();
-	
-	                            return (enumerator.hasCurrent) ? this.yieldReturn(enumerator.current) : this.yieldBreak();
-	                        },
-	                        Functions.Blank);
-	                });
-	            }
-	        }
-	
-	        // case function/object : Create keyValuePair[]
-	        return new Enumerable(function () {
-	            var array = [];
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () {
-	                    for (var key in obj) {
-	                        var value = obj[key];
-	                        if (!(value instanceof Function) && Object.prototype.hasOwnProperty.call(obj, key)) {
-	                            array.push({ key: key, value: value });
-	                        }
-	                    }
-	                },
-	                function () {
-	                    return (index < array.length)
-	                        ? this.yieldReturn(array[index++])
-	                        : false;
-	                },
-	                Functions.Blank);
-	        });
-	    },
-	
-	    Enumerable.make = function (element) {
-	        return Enumerable.repeat(element, 1);
-	    };
-	
-	    // Overload:function(input, pattern)
-	    // Overload:function(input, pattern, flags)
-	    Enumerable.matches = function (input, pattern, flags) {
-	        if (flags == null) flags = "";
-	        if (pattern instanceof RegExp) {
-	            flags += (pattern.ignoreCase) ? "i" : "";
-	            flags += (pattern.multiline) ? "m" : "";
-	            pattern = pattern.source;
-	        }
-	        if (flags.indexOf("g") === -1) flags += "g";
-	
-	        return new Enumerable(function () {
-	            var regex;
-	            return new IEnumerator(
-	                function () { regex = new RegExp(pattern, flags); },
-	                function () {
-	                    var match = regex.exec(input);
-	                    return (match) ? this.yieldReturn(match) : false;
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    // Overload:function(start, count)
-	    // Overload:function(start, count, step)
-	    Enumerable.range = function (start, count, step) {
-	        if (step == null) step = 1;
-	
-	        return new Enumerable(function () {
-	            var value;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () { value = start - step; },
-	                function () {
-	                    return (index++ < count)
-	                        ? this.yieldReturn(value += step)
-	                        : this.yieldBreak();
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    // Overload:function(start, count)
-	    // Overload:function(start, count, step)
-	    Enumerable.rangeDown = function (start, count, step) {
-	        if (step == null) step = 1;
-	
-	        return new Enumerable(function () {
-	            var value;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () { value = start + step; },
-	                function () {
-	                    return (index++ < count)
-	                        ? this.yieldReturn(value -= step)
-	                        : this.yieldBreak();
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    // Overload:function(start, to)
-	    // Overload:function(start, to, step)
-	    Enumerable.rangeTo = function (start, to, step) {
-	        if (step == null) step = 1;
-	
-	        if (start < to) {
-	            return new Enumerable(function () {
-	                var value;
-	
-	                return new IEnumerator(
-	                function () { value = start - step; },
-	                function () {
-	                    var next = value += step;
-	                    return (next <= to)
-	                        ? this.yieldReturn(next)
-	                        : this.yieldBreak();
-	                },
-	                Functions.Blank);
-	            });
-	        }
-	        else {
-	            return new Enumerable(function () {
-	                var value;
-	
-	                return new IEnumerator(
-	                function () { value = start + step; },
-	                function () {
-	                    var next = value -= step;
-	                    return (next >= to)
-	                        ? this.yieldReturn(next)
-	                        : this.yieldBreak();
-	                },
-	                Functions.Blank);
-	            });
-	        }
-	    };
-	
-	    // Overload:function(element)
-	    // Overload:function(element, count)
-	    Enumerable.repeat = function (element, count) {
-	        if (count != null) return Enumerable.repeat(element).take(count);
-	
-	        return new Enumerable(function () {
-	            return new IEnumerator(
-	                Functions.Blank,
-	                function () { return this.yieldReturn(element); },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.repeatWithFinalize = function (initializer, finalizer) {
-	        initializer = Utils.createLambda(initializer);
-	        finalizer = Utils.createLambda(finalizer);
-	
-	        return new Enumerable(function () {
-	            var element;
-	            return new IEnumerator(
-	                function () { element = initializer(); },
-	                function () { return this.yieldReturn(element); },
-	                function () {
-	                    if (element != null) {
-	                        finalizer(element);
-	                        element = null;
-	                    }
-	                });
-	        });
-	    };
-	
-	    // Overload:function(func)
-	    // Overload:function(func, count)
-	    Enumerable.generate = function (func, count) {
-	        if (count != null) return Enumerable.generate(func).take(count);
-	        func = Utils.createLambda(func);
-	
-	        return new Enumerable(function () {
-	            return new IEnumerator(
-	                Functions.Blank,
-	                function () { return this.yieldReturn(func()); },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(start)
-	    // Overload:function(start, step)
-	    Enumerable.toInfinity = function (start, step) {
-	        if (start == null) start = 0;
-	        if (step == null) step = 1;
-	
-	        return new Enumerable(function () {
-	            var value;
-	            return new IEnumerator(
-	                function () { value = start - step; },
-	                function () { return this.yieldReturn(value += step); },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(start)
-	    // Overload:function(start, step)
-	    Enumerable.toNegativeInfinity = function (start, step) {
-	        if (start == null) start = 0;
-	        if (step == null) step = 1;
-	
-	        return new Enumerable(function () {
-	            var value;
-	            return new IEnumerator(
-	                function () { value = start + step; },
-	                function () { return this.yieldReturn(value -= step); },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.unfold = function (seed, func) {
-	        func = Utils.createLambda(func);
-	
-	        return new Enumerable(function () {
-	            var isFirst = true;
-	            var value;
-	            return new IEnumerator(
-	                Functions.Blank,
-	                function () {
-	                    if (isFirst) {
-	                        isFirst = false;
-	                        value = seed;
-	                        return this.yieldReturn(value);
-	                    }
-	                    value = func(value);
-	                    return this.yieldReturn(value);
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.defer = function (enumerableFactory) {
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () { enumerator = Enumerable.from(enumerableFactory()).getEnumerator(); },
-	                function () {
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(enumerator.current())
-	                        : this.yieldBreak();
-	                },
-	                function () {
-	                    Utils.dispose(enumerator);
-	                });
-	        });
-	    };
-	
-	    // Extension Methods
-	
-	    /* Projection and Filtering Methods */
-	
-	    // Overload:function(func)
-	    // Overload:function(func, resultSelector<element>)
-	    // Overload:function(func, resultSelector<element, nestLevel>)
-	    Enumerable.prototype.traverseBreadthFirst = function (func, resultSelector) {
-	        var source = this;
-	        func = Utils.createLambda(func);
-	        resultSelector = Utils.createLambda(resultSelector);
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var nestLevel = 0;
-	            var buffer = [];
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    while (true) {
-	                        if (enumerator.moveNext()) {
-	                            buffer.push(enumerator.current());
-	                            return this.yieldReturn(resultSelector(enumerator.current(), nestLevel));
-	                        }
-	
-	                        var next = Enumerable.from(buffer).selectMany(function (x) { return func(x); });
-	                        if (!next.any()) {
-	                            return false;
-	                        }
-	                        else {
-	                            nestLevel++;
-	                            buffer = [];
-	                            Utils.dispose(enumerator);
-	                            enumerator = next.getEnumerator();
-	                        }
-	                    }
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(func)
-	    // Overload:function(func, resultSelector<element>)
-	    // Overload:function(func, resultSelector<element, nestLevel>)
-	    Enumerable.prototype.traverseDepthFirst = function (func, resultSelector) {
-	        var source = this;
-	        func = Utils.createLambda(func);
-	        resultSelector = Utils.createLambda(resultSelector);
-	
-	        return new Enumerable(function () {
-	            var enumeratorStack = [];
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    while (true) {
-	                        if (enumerator.moveNext()) {
-	                            var value = resultSelector(enumerator.current(), enumeratorStack.length);
-	                            enumeratorStack.push(enumerator);
-	                            enumerator = Enumerable.from(func(enumerator.current())).getEnumerator();
-	                            return this.yieldReturn(value);
-	                        }
-	
-	                        if (enumeratorStack.length <= 0) return false;
-	                        Utils.dispose(enumerator);
-	                        enumerator = enumeratorStack.pop();
-	                    }
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(enumerator);
-	                    }
-	                    finally {
-	                        Enumerable.from(enumeratorStack).forEach(function (s) { s.dispose(); });
-	                    }
-	                });
-	        });
-	    };
-	
-	    Enumerable.prototype.flatten = function () {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var middleEnumerator = null;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    while (true) {
-	                        if (middleEnumerator != null) {
-	                            if (middleEnumerator.moveNext()) {
-	                                return this.yieldReturn(middleEnumerator.current());
-	                            }
-	                            else {
-	                                middleEnumerator = null;
-	                            }
-	                        }
-	
-	                        if (enumerator.moveNext()) {
-	                            if (enumerator.current() instanceof Array) {
-	                                Utils.dispose(middleEnumerator);
-	                                middleEnumerator = Enumerable.from(enumerator.current())
-	                                    .selectMany(Functions.Identity)
-	                                    .flatten()
-	                                    .getEnumerator();
-	                                continue;
-	                            }
-	                            else {
-	                                return this.yieldReturn(enumerator.current());
-	                            }
-	                        }
-	
-	                        return false;
-	                    }
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(enumerator);
-	                    }
-	                    finally {
-	                        Utils.dispose(middleEnumerator);
-	                    }
-	                });
-	        });
-	    };
-	
-	    Enumerable.prototype.pairwise = function (selector) {
-	        var source = this;
-	        selector = Utils.createLambda(selector);
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.getEnumerator();
-	                    enumerator.moveNext();
-	                },
-	                function () {
-	                    var prev = enumerator.current();
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(selector(prev, enumerator.current()))
-	                        : false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(func)
-	    // Overload:function(seed,func<value,element>)
-	    Enumerable.prototype.scan = function (seed, func) {
-	        var isUseSeed;
-	        if (func == null) {
-	            func = Utils.createLambda(seed); // arguments[0]
-	            isUseSeed = false;
-	        } else {
-	            func = Utils.createLambda(func);
-	            isUseSeed = true;
-	        }
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var value;
-	            var isFirst = true;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    if (isFirst) {
-	                        isFirst = false;
-	                        if (!isUseSeed) {
-	                            if (enumerator.moveNext()) {
-	                                return this.yieldReturn(value = enumerator.current());
-	                            }
-	                        }
-	                        else {
-	                            return this.yieldReturn(value = seed);
-	                        }
-	                    }
-	
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(value = func(value, enumerator.current()))
-	                        : false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(selector<element>)
-	    // Overload:function(selector<element,index>)
-	    Enumerable.prototype.select = function (selector) {
-	        selector = Utils.createLambda(selector);
-	
-	        if (selector.length <= 1) {
-	            return new WhereSelectEnumerable(this, null, selector);
-	        }
-	        else {
-	            var source = this;
-	
-	            return new Enumerable(function () {
-	                var enumerator;
-	                var index = 0;
-	
-	                return new IEnumerator(
-	                    function () { enumerator = source.getEnumerator(); },
-	                    function () {
-	                        return (enumerator.moveNext())
-	                            ? this.yieldReturn(selector(enumerator.current(), index++))
-	                            : false;
-	                    },
-	                    function () { Utils.dispose(enumerator); });
-	            });
-	        }
-	    };
-	
-	    // Overload:function(collectionSelector<element>)
-	    // Overload:function(collectionSelector<element,index>)
-	    // Overload:function(collectionSelector<element>,resultSelector)
-	    // Overload:function(collectionSelector<element,index>,resultSelector)
-	    Enumerable.prototype.selectMany = function (collectionSelector, resultSelector) {
-	        var source = this;
-	        collectionSelector = Utils.createLambda(collectionSelector);
-	        if (resultSelector == null) resultSelector = function (a, b) { return b; };
-	        resultSelector = Utils.createLambda(resultSelector);
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var middleEnumerator = undefined;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    if (middleEnumerator === undefined) {
-	                        if (!enumerator.moveNext()) return false;
-	                    }
-	                    do {
-	                        if (middleEnumerator == null) {
-	                            var middleSeq = collectionSelector(enumerator.current(), index++);
-	                            middleEnumerator = Enumerable.from(middleSeq).getEnumerator();
-	                        }
-	                        if (middleEnumerator.moveNext()) {
-	                            return this.yieldReturn(resultSelector(enumerator.current(), middleEnumerator.current()));
-	                        }
-	                        Utils.dispose(middleEnumerator);
-	                        middleEnumerator = null;
-	                    } while (enumerator.moveNext());
-	                    return false;
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(enumerator);
-	                    }
-	                    finally {
-	                        Utils.dispose(middleEnumerator);
-	                    }
-	                });
-	        });
-	    };
-	
-	    // Overload:function(predicate<element>)
-	    // Overload:function(predicate<element,index>)
-	    Enumerable.prototype.where = function (predicate) {
-	        predicate = Utils.createLambda(predicate);
-	
-	        if (predicate.length <= 1) {
-	            return new WhereEnumerable(this, predicate);
-	        }
-	        else {
-	            var source = this;
-	
-	            return new Enumerable(function () {
-	                var enumerator;
-	                var index = 0;
-	
-	                return new IEnumerator(
-	                    function () { enumerator = source.getEnumerator(); },
-	                    function () {
-	                        while (enumerator.moveNext()) {
-	                            if (predicate(enumerator.current(), index++)) {
-	                                return this.yieldReturn(enumerator.current());
-	                            }
-	                        }
-	                        return false;
-	                    },
-	                    function () { Utils.dispose(enumerator); });
-	            });
-	        }
-	    };
-	
-	
-	    // Overload:function(selector<element>)
-	    // Overload:function(selector<element,index>)
-	    Enumerable.prototype.choose = function (selector) {
-	        selector = Utils.createLambda(selector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    while (enumerator.moveNext()) {
-	                        var result = selector(enumerator.current(), index++);
-	                        if (result != null) {
-	                            return this.yieldReturn(result);
-	                        }
-	                    }
-	                    return this.yieldBreak();
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    Enumerable.prototype.ofType = function (type) {
-	        var typeName;
-	        switch (type) {
-	            case Number:
-	                typeName = Types.Number;
-	                break;
-	            case String:
-	                typeName = Types.String;
-	                break;
-	            case Boolean:
-	                typeName = Types.Boolean;
-	                break;
-	            case Function:
-	                typeName = Types.Function;
-	                break;
-	            default:
-	                typeName = null;
-	                break;
-	        }
-	        return (typeName === null)
-	            ? this.where(function (x) { return x instanceof type; })
-	            : this.where(function (x) { return typeof x === typeName; });
-	    };
-	
-	    // mutiple arguments, last one is selector, others are enumerable
-	    Enumerable.prototype.zip = function () {
-	        var args = arguments;
-	        var selector = Utils.createLambda(arguments[arguments.length - 1]);
-	
-	        var source = this;
-	        // optimized case:argument is 2
-	        if (arguments.length == 2) {
-	            var second = arguments[0];
-	
-	            return new Enumerable(function () {
-	                var firstEnumerator;
-	                var secondEnumerator;
-	                var index = 0;
-	
-	                return new IEnumerator(
-	                function () {
-	                    firstEnumerator = source.getEnumerator();
-	                    secondEnumerator = Enumerable.from(second).getEnumerator();
-	                },
-	                function () {
-	                    if (firstEnumerator.moveNext() && secondEnumerator.moveNext()) {
-	                        return this.yieldReturn(selector(firstEnumerator.current(), secondEnumerator.current(), index++));
-	                    }
-	                    return false;
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(firstEnumerator);
-	                    } finally {
-	                        Utils.dispose(secondEnumerator);
-	                    }
-	                });
-	            });
-	        }
-	        else {
-	            return new Enumerable(function () {
-	                var enumerators;
-	                var index = 0;
-	
-	                return new IEnumerator(
-	                function () {
-	                    var array = Enumerable.make(source)
-	                        .concat(Enumerable.from(args).takeExceptLast().select(Enumerable.from))
-	                        .select(function (x) { return x.getEnumerator() })
-	                        .toArray();
-	                    enumerators = Enumerable.from(array);
-	                },
-	                function () {
-	                    if (enumerators.all(function (x) { return x.moveNext() })) {
-	                        var array = enumerators
-	                            .select(function (x) { return x.current() })
-	                            .toArray();
-	                        array.push(index++);
-	                        return this.yieldReturn(selector.apply(null, array));
-	                    }
-	                    else {
-	                        return this.yieldBreak();
-	                    }
-	                },
-	                function () {
-	                    Enumerable.from(enumerators).forEach(Utils.dispose);
-	                });
-	            });
-	        }
-	    };
-	
-	    // mutiple arguments
-	    Enumerable.prototype.merge = function () {
-	        var args = arguments;
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerators;
-	            var index = -1;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerators = Enumerable.make(source)
-	                        .concat(Enumerable.from(args).select(Enumerable.from))
-	                        .select(function (x) { return x.getEnumerator() })
-	                        .toArray();
-	                },
-	                function () {
-	                    while (enumerators.length > 0) {
-	                        index = (index >= enumerators.length - 1) ? 0 : index + 1;
-	                        var enumerator = enumerators[index];
-	
-	                        if (enumerator.moveNext()) {
-	                            return this.yieldReturn(enumerator.current());
-	                        }
-	                        else {
-	                            enumerator.dispose();
-	                            enumerators.splice(index--, 1);
-	                        }
-	                    }
-	                    return this.yieldBreak();
-	                },
-	                function () {
-	                    Enumerable.from(enumerators).forEach(Utils.dispose);
-	                });
-	        });
-	    };
-	
-	    /* Join Methods */
-	
-	    // Overload:function (inner, outerKeySelector, innerKeySelector, resultSelector)
-	    // Overload:function (inner, outerKeySelector, innerKeySelector, resultSelector, compareSelector)
-	    Enumerable.prototype.join = function (inner, outerKeySelector, innerKeySelector, resultSelector, compareSelector) {
-	        outerKeySelector = Utils.createLambda(outerKeySelector);
-	        innerKeySelector = Utils.createLambda(innerKeySelector);
-	        resultSelector = Utils.createLambda(resultSelector);
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var outerEnumerator;
-	            var lookup;
-	            var innerElements = null;
-	            var innerCount = 0;
-	
-	            return new IEnumerator(
-	                function () {
-	                    outerEnumerator = source.getEnumerator();
-	                    lookup = Enumerable.from(inner).toLookup(innerKeySelector, Functions.Identity, compareSelector);
-	                },
-	                function () {
-	                    while (true) {
-	                        if (innerElements != null) {
-	                            var innerElement = innerElements[innerCount++];
-	                            if (innerElement !== undefined) {
-	                                return this.yieldReturn(resultSelector(outerEnumerator.current(), innerElement));
-	                            }
-	
-	                            innerElement = null;
-	                            innerCount = 0;
-	                        }
-	
-	                        if (outerEnumerator.moveNext()) {
-	                            var key = outerKeySelector(outerEnumerator.current());
-	                            innerElements = lookup.get(key).toArray();
-	                        } else {
-	                            return false;
-	                        }
-	                    }
-	                },
-	                function () { Utils.dispose(outerEnumerator); });
-	        });
-	    };
-	
-	    // Overload:function (inner, outerKeySelector, innerKeySelector, resultSelector)
-	    // Overload:function (inner, outerKeySelector, innerKeySelector, resultSelector, compareSelector)
-	    Enumerable.prototype.groupJoin = function (inner, outerKeySelector, innerKeySelector, resultSelector, compareSelector) {
-	        outerKeySelector = Utils.createLambda(outerKeySelector);
-	        innerKeySelector = Utils.createLambda(innerKeySelector);
-	        resultSelector = Utils.createLambda(resultSelector);
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator = source.getEnumerator();
-	            var lookup = null;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.getEnumerator();
-	                    lookup = Enumerable.from(inner).toLookup(innerKeySelector, Functions.Identity, compareSelector);
-	                },
-	                function () {
-	                    if (enumerator.moveNext()) {
-	                        var innerElement = lookup.get(outerKeySelector(enumerator.current()));
-	                        return this.yieldReturn(resultSelector(enumerator.current(), innerElement));
-	                    }
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    /* Set Methods */
-	
-	    Enumerable.prototype.all = function (predicate) {
-	        predicate = Utils.createLambda(predicate);
-	
-	        var result = true;
-	        this.forEach(function (x) {
-	            if (!predicate(x)) {
-	                result = false;
-	                return false; // break
-	            }
-	        });
-	        return result;
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(predicate)
-	    Enumerable.prototype.any = function (predicate) {
-	        predicate = Utils.createLambda(predicate);
-	
-	        var enumerator = this.getEnumerator();
-	        try {
-	            if (arguments.length == 0) return enumerator.moveNext(); // case:function()
-	
-	            while (enumerator.moveNext()) // case:function(predicate)
-	            {
-	                if (predicate(enumerator.current())) return true;
-	            }
-	            return false;
-	        }
-	        finally {
-	            Utils.dispose(enumerator);
-	        }
-	    };
-	
-	    Enumerable.prototype.isEmpty = function () {
-	        return !this.any();
-	    };
-	
-	    // multiple arguments
-	    Enumerable.prototype.concat = function () {
-	        var source = this;
-	
-	        if (arguments.length == 1) {
-	            var second = arguments[0];
-	
-	            return new Enumerable(function () {
-	                var firstEnumerator;
-	                var secondEnumerator;
-	
-	                return new IEnumerator(
-	                function () { firstEnumerator = source.getEnumerator(); },
-	                function () {
-	                    if (secondEnumerator == null) {
-	                        if (firstEnumerator.moveNext()) return this.yieldReturn(firstEnumerator.current());
-	                        secondEnumerator = Enumerable.from(second).getEnumerator();
-	                    }
-	                    if (secondEnumerator.moveNext()) return this.yieldReturn(secondEnumerator.current());
-	                    return false;
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(firstEnumerator);
-	                    }
-	                    finally {
-	                        Utils.dispose(secondEnumerator);
-	                    }
-	                });
-	            });
-	        }
-	        else {
-	            var args = arguments;
-	
-	            return new Enumerable(function () {
-	                var enumerators;
-	
-	                return new IEnumerator(
-	                    function () {
-	                        enumerators = Enumerable.make(source)
-	                            .concat(Enumerable.from(args).select(Enumerable.from))
-	                            .select(function (x) { return x.getEnumerator() })
-	                            .toArray();
-	                    },
-	                    function () {
-	                        while (enumerators.length > 0) {
-	                            var enumerator = enumerators[0];
-	
-	                            if (enumerator.moveNext()) {
-	                                return this.yieldReturn(enumerator.current());
-	                            }
-	                            else {
-	                                enumerator.dispose();
-	                                enumerators.splice(0, 1);
-	                            }
-	                        }
-	                        return this.yieldBreak();
-	                    },
-	                    function () {
-	                        Enumerable.from(enumerators).forEach(Utils.dispose);
-	                    });
-	            });
-	        }
-	    };
-	
-	    Enumerable.prototype.insert = function (index, second) {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var firstEnumerator;
-	            var secondEnumerator;
-	            var count = 0;
-	            var isEnumerated = false;
-	
-	            return new IEnumerator(
-	                function () {
-	                    firstEnumerator = source.getEnumerator();
-	                    secondEnumerator = Enumerable.from(second).getEnumerator();
-	                },
-	                function () {
-	                    if (count == index && secondEnumerator.moveNext()) {
-	                        isEnumerated = true;
-	                        return this.yieldReturn(secondEnumerator.current());
-	                    }
-	                    if (firstEnumerator.moveNext()) {
-	                        count++;
-	                        return this.yieldReturn(firstEnumerator.current());
-	                    }
-	                    if (!isEnumerated && secondEnumerator.moveNext()) {
-	                        return this.yieldReturn(secondEnumerator.current());
-	                    }
-	                    return false;
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(firstEnumerator);
-	                    }
-	                    finally {
-	                        Utils.dispose(secondEnumerator);
-	                    }
-	                });
-	        });
-	    };
-	
-	    Enumerable.prototype.alternate = function (alternateValueOrSequence) {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var buffer;
-	            var enumerator;
-	            var alternateSequence;
-	            var alternateEnumerator;
-	
-	            return new IEnumerator(
-	                function () {
-	                    if (alternateValueOrSequence instanceof Array || alternateValueOrSequence.getEnumerator != null) {
-	                        alternateSequence = Enumerable.from(Enumerable.from(alternateValueOrSequence).toArray()); // freeze
-	                    }
-	                    else {
-	                        alternateSequence = Enumerable.make(alternateValueOrSequence);
-	                    }
-	                    enumerator = source.getEnumerator();
-	                    if (enumerator.moveNext()) buffer = enumerator.current();
-	                },
-	                function () {
-	                    while (true) {
-	                        if (alternateEnumerator != null) {
-	                            if (alternateEnumerator.moveNext()) {
-	                                return this.yieldReturn(alternateEnumerator.current());
-	                            }
-	                            else {
-	                                alternateEnumerator = null;
-	                            }
-	                        }
-	
-	                        if (buffer == null && enumerator.moveNext()) {
-	                            buffer = enumerator.current(); // hasNext
-	                            alternateEnumerator = alternateSequence.getEnumerator();
-	                            continue; // GOTO
-	                        }
-	                        else if (buffer != null) {
-	                            var retVal = buffer;
-	                            buffer = null;
-	                            return this.yieldReturn(retVal);
-	                        }
-	
-	                        return this.yieldBreak();
-	                    }
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(enumerator);
-	                    }
-	                    finally {
-	                        Utils.dispose(alternateEnumerator);
-	                    }
-	                });
-	        });
-	    };
-	
-	    // Overload:function(value)
-	    // Overload:function(value, compareSelector)
-	    Enumerable.prototype.contains = function (value, compareSelector) {
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var enumerator = this.getEnumerator();
-	        try {
-	            while (enumerator.moveNext()) {
-	                if (compareSelector(enumerator.current()) === value) return true;
-	            }
-	            return false;
-	        }
-	        finally {
-	            Utils.dispose(enumerator);
-	        }
-	    };
-	
-	    Enumerable.prototype.defaultIfEmpty = function (defaultValue) {
-	        var source = this;
-	        if (defaultValue === undefined) defaultValue = null;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var isFirst = true;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    if (enumerator.moveNext()) {
-	                        isFirst = false;
-	                        return this.yieldReturn(enumerator.current());
-	                    }
-	                    else if (isFirst) {
-	                        isFirst = false;
-	                        return this.yieldReturn(defaultValue);
-	                    }
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(compareSelector)
-	    Enumerable.prototype.distinct = function (compareSelector) {
-	        return this.except(Enumerable.empty(), compareSelector);
-	    };
-	
-	    Enumerable.prototype.distinctUntilChanged = function (compareSelector) {
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var compareKey;
-	            var initial;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.getEnumerator();
-	                },
-	                function () {
-	                    while (enumerator.moveNext()) {
-	                        var key = compareSelector(enumerator.current());
-	
-	                        if (initial) {
-	                            initial = false;
-	                            compareKey = key;
-	                            return this.yieldReturn(enumerator.current());
-	                        }
-	
-	                        if (compareKey === key) {
-	                            continue;
-	                        }
-	
-	                        compareKey = key;
-	                        return this.yieldReturn(enumerator.current());
-	                    }
-	                    return this.yieldBreak();
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(second)
-	    // Overload:function(second, compareSelector)
-	    Enumerable.prototype.except = function (second, compareSelector) {
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var keys;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.getEnumerator();
-	                    keys = new Dictionary(compareSelector);
-	                    Enumerable.from(second).forEach(function (key) { keys.add(key); });
-	                },
-	                function () {
-	                    while (enumerator.moveNext()) {
-	                        var current = enumerator.current();
-	                        if (!keys.contains(current)) {
-	                            keys.add(current);
-	                            return this.yieldReturn(current);
-	                        }
-	                    }
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(second)
-	    // Overload:function(second, compareSelector)
-	    Enumerable.prototype.intersect = function (second, compareSelector) {
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var keys;
-	            var outs;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.getEnumerator();
-	
-	                    keys = new Dictionary(compareSelector);
-	                    Enumerable.from(second).forEach(function (key) { keys.add(key); });
-	                    outs = new Dictionary(compareSelector);
-	                },
-	                function () {
-	                    while (enumerator.moveNext()) {
-	                        var current = enumerator.current();
-	                        if (!outs.contains(current) && keys.contains(current)) {
-	                            outs.add(current);
-	                            return this.yieldReturn(current);
-	                        }
-	                    }
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(second)
-	    // Overload:function(second, compareSelector)
-	    Enumerable.prototype.sequenceEqual = function (second, compareSelector) {
-	        compareSelector = Utils.createLambda(compareSelector);
-	
-	        var firstEnumerator = this.getEnumerator();
-	        try {
-	            var secondEnumerator = Enumerable.from(second).getEnumerator();
-	            try {
-	                while (firstEnumerator.moveNext()) {
-	                    if (!secondEnumerator.moveNext()
-	                    || compareSelector(firstEnumerator.current()) !== compareSelector(secondEnumerator.current())) {
-	                        return false;
-	                    }
-	                }
-	
-	                if (secondEnumerator.moveNext()) return false;
-	                return true;
-	            }
-	            finally {
-	                Utils.dispose(secondEnumerator);
-	            }
-	        }
-	        finally {
-	            Utils.dispose(firstEnumerator);
-	        }
-	    };
-	
-	    Enumerable.prototype.union = function (second, compareSelector) {
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var firstEnumerator;
-	            var secondEnumerator;
-	            var keys;
-	
-	            return new IEnumerator(
-	                function () {
-	                    firstEnumerator = source.getEnumerator();
-	                    keys = new Dictionary(compareSelector);
-	                },
-	                function () {
-	                    var current;
-	                    if (secondEnumerator === undefined) {
-	                        while (firstEnumerator.moveNext()) {
-	                            current = firstEnumerator.current();
-	                            if (!keys.contains(current)) {
-	                                keys.add(current);
-	                                return this.yieldReturn(current);
-	                            }
-	                        }
-	                        secondEnumerator = Enumerable.from(second).getEnumerator();
-	                    }
-	                    while (secondEnumerator.moveNext()) {
-	                        current = secondEnumerator.current();
-	                        if (!keys.contains(current)) {
-	                            keys.add(current);
-	                            return this.yieldReturn(current);
-	                        }
-	                    }
-	                    return false;
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(firstEnumerator);
-	                    }
-	                    finally {
-	                        Utils.dispose(secondEnumerator);
-	                    }
-	                });
-	        });
-	    };
-	
-	    /* Ordering Methods */
-	
-	    Enumerable.prototype.orderBy = function (keySelector) {
-	        return new OrderedEnumerable(this, keySelector, false);
-	    };
-	
-	    Enumerable.prototype.orderByDescending = function (keySelector) {
-	        return new OrderedEnumerable(this, keySelector, true);
-	    };
-	
-	    Enumerable.prototype.reverse = function () {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var buffer;
-	            var index;
-	
-	            return new IEnumerator(
-	                function () {
-	                    buffer = source.toArray();
-	                    index = buffer.length;
-	                },
-	                function () {
-	                    return (index > 0)
-	                        ? this.yieldReturn(buffer[--index])
-	                        : false;
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.prototype.shuffle = function () {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var buffer;
-	
-	            return new IEnumerator(
-	                function () { buffer = source.toArray(); },
-	                function () {
-	                    if (buffer.length > 0) {
-	                        var i = Math.floor(Math.random() * buffer.length);
-	                        return this.yieldReturn(buffer.splice(i, 1)[0]);
-	                    }
-	                    return false;
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    Enumerable.prototype.weightedSample = function (weightSelector) {
-	        weightSelector = Utils.createLambda(weightSelector);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var sortedByBound;
-	            var totalWeight = 0;
-	
-	            return new IEnumerator(
-	                function () {
-	                    sortedByBound = source
-	                        .choose(function (x) {
-	                            var weight = weightSelector(x);
-	                            if (weight <= 0) return null; // ignore 0
-	
-	                            totalWeight += weight;
-	                            return { value: x, bound: totalWeight };
-	                        })
-	                        .toArray();
-	                },
-	                function () {
-	                    if (sortedByBound.length > 0) {
-	                        var draw = Math.floor(Math.random() * totalWeight) + 1;
-	
-	                        var lower = -1;
-	                        var upper = sortedByBound.length;
-	                        while (upper - lower > 1) {
-	                            var index = Math.floor((lower + upper) / 2);
-	                            if (sortedByBound[index].bound >= draw) {
-	                                upper = index;
-	                            }
-	                            else {
-	                                lower = index;
-	                            }
-	                        }
-	
-	                        return this.yieldReturn(sortedByBound[upper].value);
-	                    }
-	
-	                    return this.yieldBreak();
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    /* Grouping Methods */
-	
-	    // Overload:function(keySelector)
-	    // Overload:function(keySelector,elementSelector)
-	    // Overload:function(keySelector,elementSelector,resultSelector)
-	    // Overload:function(keySelector,elementSelector,resultSelector,compareSelector)
-	    Enumerable.prototype.groupBy = function (keySelector, elementSelector, resultSelector, compareSelector) {
-	        var source = this;
-	        keySelector = Utils.createLambda(keySelector);
-	        elementSelector = Utils.createLambda(elementSelector);
-	        if (resultSelector != null) resultSelector = Utils.createLambda(resultSelector);
-	        compareSelector = Utils.createLambda(compareSelector);
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.toLookup(keySelector, elementSelector, compareSelector)
-	                        .toEnumerable()
-	                        .getEnumerator();
-	                },
-	                function () {
-	                    while (enumerator.moveNext()) {
-	                        return (resultSelector == null)
-	                            ? this.yieldReturn(enumerator.current())
-	                            : this.yieldReturn(resultSelector(enumerator.current().key(), enumerator.current()));
-	                    }
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(keySelector)
-	    // Overload:function(keySelector,elementSelector)
-	    // Overload:function(keySelector,elementSelector,resultSelector)
-	    // Overload:function(keySelector,elementSelector,resultSelector,compareSelector)
-	    Enumerable.prototype.partitionBy = function (keySelector, elementSelector, resultSelector, compareSelector) {
-	
-	        var source = this;
-	        keySelector = Utils.createLambda(keySelector);
-	        elementSelector = Utils.createLambda(elementSelector);
-	        compareSelector = Utils.createLambda(compareSelector);
-	        var hasResultSelector;
-	        if (resultSelector == null) {
-	            hasResultSelector = false;
-	            resultSelector = function (key, group) { return new Grouping(key, group); };
-	        }
-	        else {
-	            hasResultSelector = true;
-	            resultSelector = Utils.createLambda(resultSelector);
-	        }
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var key;
-	            var compareKey;
-	            var group = [];
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.getEnumerator();
-	                    if (enumerator.moveNext()) {
-	                        key = keySelector(enumerator.current());
-	                        compareKey = compareSelector(key);
-	                        group.push(elementSelector(enumerator.current()));
-	                    }
-	                },
-	                function () {
-	                    var hasNext;
-	                    while ((hasNext = enumerator.moveNext()) == true) {
-	                        if (compareKey === compareSelector(keySelector(enumerator.current()))) {
-	                            group.push(elementSelector(enumerator.current()));
-	                        }
-	                        else break;
-	                    }
-	
-	                    if (group.length > 0) {
-	                        var result = (hasResultSelector)
-	                            ? resultSelector(key, Enumerable.from(group))
-	                            : resultSelector(key, group);
-	                        if (hasNext) {
-	                            key = keySelector(enumerator.current());
-	                            compareKey = compareSelector(key);
-	                            group = [elementSelector(enumerator.current())];
-	                        }
-	                        else group = [];
-	
-	                        return this.yieldReturn(result);
-	                    }
-	
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    Enumerable.prototype.buffer = function (count) {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    var array = [];
-	                    var index = 0;
-	                    while (enumerator.moveNext()) {
-	                        array.push(enumerator.current());
-	                        if (++index >= count) return this.yieldReturn(array);
-	                    }
-	                    if (array.length > 0) return this.yieldReturn(array);
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    /* Aggregate Methods */
-	
-	    // Overload:function(func)
-	    // Overload:function(seed,func)
-	    // Overload:function(seed,func,resultSelector)
-	    Enumerable.prototype.aggregate = function (seed, func, resultSelector) {
-	        resultSelector = Utils.createLambda(resultSelector);
-	        return resultSelector(this.scan(seed, func, resultSelector).last());
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(selector)
-	    Enumerable.prototype.average = function (selector) {
-	        selector = Utils.createLambda(selector);
-	
-	        var sum = 0;
-	        var count = 0;
-	        this.forEach(function (x) {
-	            sum += selector(x);
-	            ++count;
-	        });
-	
-	        return sum / count;
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(predicate)
-	    Enumerable.prototype.count = function (predicate) {
-	        predicate = (predicate == null) ? Functions.True : Utils.createLambda(predicate);
-	
-	        var count = 0;
-	        this.forEach(function (x, i) {
-	            if (predicate(x, i))++count;
-	        });
-	        return count;
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(selector)
-	    Enumerable.prototype.max = function (selector) {
-	        if (selector == null) selector = Functions.Identity;
-	        return this.select(selector).aggregate(function (a, b) { return (a > b) ? a : b; });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(selector)
-	    Enumerable.prototype.min = function (selector) {
-	        if (selector == null) selector = Functions.Identity;
-	        return this.select(selector).aggregate(function (a, b) { return (a < b) ? a : b; });
-	    };
-	
-	    Enumerable.prototype.maxBy = function (keySelector) {
-	        keySelector = Utils.createLambda(keySelector);
-	        return this.aggregate(function (a, b) { return (keySelector(a) > keySelector(b)) ? a : b; });
-	    };
-	
-	    Enumerable.prototype.minBy = function (keySelector) {
-	        keySelector = Utils.createLambda(keySelector);
-	        return this.aggregate(function (a, b) { return (keySelector(a) < keySelector(b)) ? a : b; });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(selector)
-	    Enumerable.prototype.sum = function (selector) {
-	        if (selector == null) selector = Functions.Identity;
-	        return this.select(selector).aggregate(0, function (a, b) { return a + b; });
-	    };
-	
-	    /* Paging Methods */
-	
-	    Enumerable.prototype.elementAt = function (index) {
-	        var value;
-	        var found = false;
-	        this.forEach(function (x, i) {
-	            if (i == index) {
-	                value = x;
-	                found = true;
-	                return false;
-	            }
-	        });
-	
-	        if (!found) throw new Error("index is less than 0 or greater than or equal to the number of elements in source.");
-	        return value;
-	    };
-	
-	    Enumerable.prototype.elementAtOrDefault = function (index, defaultValue) {
-	        if (defaultValue === undefined) defaultValue = null;
-	        var value;
-	        var found = false;
-	        this.forEach(function (x, i) {
-	            if (i == index) {
-	                value = x;
-	                found = true;
-	                return false;
-	            }
-	        });
-	
-	        return (!found) ? defaultValue : value;
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(predicate)
-	    Enumerable.prototype.first = function (predicate) {
-	        if (predicate != null) return this.where(predicate).first();
-	
-	        var value;
-	        var found = false;
-	        this.forEach(function (x) {
-	            value = x;
-	            found = true;
-	            return false;
-	        });
-	
-	        if (!found) throw new Error("first:No element satisfies the condition.");
-	        return value;
-	    };
-	
-	    Enumerable.prototype.firstOrDefault = function (predicate, defaultValue) {
-	        if (defaultValue === undefined) defaultValue = null;
-	        if (predicate != null) return this.where(predicate).firstOrDefault(null, defaultValue);
-	
-	        var value;
-	        var found = false;
-	        this.forEach(function (x) {
-	            value = x;
-	            found = true;
-	            return false;
-	        });
-	        return (!found) ? defaultValue : value;
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(predicate)
-	    Enumerable.prototype.last = function (predicate) {
-	        if (predicate != null) return this.where(predicate).last();
-	
-	        var value;
-	        var found = false;
-	        this.forEach(function (x) {
-	            found = true;
-	            value = x;
-	        });
-	
-	        if (!found) throw new Error("last:No element satisfies the condition.");
-	        return value;
-	    };
-	
-	    // Overload:function(defaultValue)
-	    // Overload:function(defaultValue,predicate)
-	    Enumerable.prototype.lastOrDefault = function (predicate, defaultValue) {
-	        if (defaultValue === undefined) defaultValue = null;
-	        if (predicate != null) return this.where(predicate).lastOrDefault(null, defaultValue);
-	
-	        var value;
-	        var found = false;
-	        this.forEach(function (x) {
-	            found = true;
-	            value = x;
-	        });
-	        return (!found) ? defaultValue : value;
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(predicate)
-	    Enumerable.prototype.single = function (predicate) {
-	        if (predicate != null) return this.where(predicate).single();
-	
-	        var value;
-	        var found = false;
-	        this.forEach(function (x) {
-	            if (!found) {
-	                found = true;
-	                value = x;
-	            } else throw new Error("single:sequence contains more than one element.");
-	        });
-	
-	        if (!found) throw new Error("single:No element satisfies the condition.");
-	        return value;
-	    };
-	
-	    // Overload:function(defaultValue)
-	    // Overload:function(defaultValue,predicate)
-	    Enumerable.prototype.singleOrDefault = function (predicate, defaultValue) {
-	        if (defaultValue === undefined) defaultValue = null;
-	        if (predicate != null) return this.where(predicate).singleOrDefault(null, defaultValue);
-	
-	        var value;
-	        var found = false;
-	        this.forEach(function (x) {
-	            if (!found) {
-	                found = true;
-	                value = x;
-	            } else throw new Error("single:sequence contains more than one element.");
-	        });
-	
-	        return (!found) ? defaultValue : value;
-	    };
-	
-	    Enumerable.prototype.skip = function (count) {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = source.getEnumerator();
-	                    while (index++ < count && enumerator.moveNext()) {
-	                    }
-	                    ;
-	                },
-	                function () {
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(enumerator.current())
-	                        : false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(predicate<element>)
-	    // Overload:function(predicate<element,index>)
-	    Enumerable.prototype.skipWhile = function (predicate) {
-	        predicate = Utils.createLambda(predicate);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var index = 0;
-	            var isSkipEnd = false;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    while (!isSkipEnd) {
-	                        if (enumerator.moveNext()) {
-	                            if (!predicate(enumerator.current(), index++)) {
-	                                isSkipEnd = true;
-	                                return this.yieldReturn(enumerator.current());
-	                            }
-	                            continue;
-	                        } else return false;
-	                    }
-	
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(enumerator.current())
-	                        : false;
-	
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    Enumerable.prototype.take = function (count) {
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    return (index++ < count && enumerator.moveNext())
-	                        ? this.yieldReturn(enumerator.current())
-	                        : false;
-	                },
-	                function () { Utils.dispose(enumerator); }
-	            );
-	        });
-	    };
-	
-	    // Overload:function(predicate<element>)
-	    // Overload:function(predicate<element,index>)
-	    Enumerable.prototype.takeWhile = function (predicate) {
-	        predicate = Utils.createLambda(predicate);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    return (enumerator.moveNext() && predicate(enumerator.current(), index++))
-	                        ? this.yieldReturn(enumerator.current())
-	                        : false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(count)
-	    Enumerable.prototype.takeExceptLast = function (count) {
-	        if (count == null) count = 1;
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            if (count <= 0) return source.getEnumerator(); // do nothing
-	
-	            var enumerator;
-	            var q = [];
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    while (enumerator.moveNext()) {
-	                        if (q.length == count) {
-	                            q.push(enumerator.current());
-	                            return this.yieldReturn(q.shift());
-	                        }
-	                        q.push(enumerator.current());
-	                    }
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    Enumerable.prototype.takeFromLast = function (count) {
-	        if (count <= 0 || count == null) return Enumerable.empty();
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var sourceEnumerator;
-	            var enumerator;
-	            var q = [];
-	
-	            return new IEnumerator(
-	                function () { sourceEnumerator = source.getEnumerator(); },
-	                function () {
-	                    while (sourceEnumerator.moveNext()) {
-	                        if (q.length == count) q.shift();
-	                        q.push(sourceEnumerator.current());
-	                    }
-	                    if (enumerator == null) {
-	                        enumerator = Enumerable.from(q).getEnumerator();
-	                    }
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(enumerator.current())
-	                        : false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(item)
-	    // Overload:function(predicate)
-	    Enumerable.prototype.indexOf = function (item) {
-	        var found = null;
-	
-	        // item as predicate
-	        if (typeof (item) === Types.Function) {
-	            this.forEach(function (x, i) {
-	                if (item(x, i)) {
-	                    found = i;
-	                    return false;
-	                }
-	            });
-	        }
-	        else {
-	            this.forEach(function (x, i) {
-	                if (x === item) {
-	                    found = i;
-	                    return false;
-	                }
-	            });
-	        }
-	
-	        return (found !== null) ? found : -1;
-	    };
-	
-	    // Overload:function(item)
-	    // Overload:function(predicate)
-	    Enumerable.prototype.lastIndexOf = function (item) {
-	        var result = -1;
-	
-	        // item as predicate
-	        if (typeof (item) === Types.Function) {
-	            this.forEach(function (x, i) {
-	                if (item(x, i)) result = i;
-	            });
-	        }
-	        else {
-	            this.forEach(function (x, i) {
-	                if (x === item) result = i;
-	            });
-	        }
-	
-	        return result;
-	    };
-	
-	    /* Convert Methods */
-	
-	    Enumerable.prototype.cast = function () {
-	        return this;
-	    };
-	
-	    Enumerable.prototype.asEnumerable = function () {
-	        return Enumerable.from(this);
-	    };
-	
-	    Enumerable.prototype.toArray = function () {
-	        var array = [];
-	        this.forEach(function (x) { array.push(x); });
-	        return array;
-	    };
-	
-	    // Overload:function(keySelector)
-	    // Overload:function(keySelector, elementSelector)
-	    // Overload:function(keySelector, elementSelector, compareSelector)
-	    Enumerable.prototype.toLookup = function (keySelector, elementSelector, compareSelector) {
-	        keySelector = Utils.createLambda(keySelector);
-	        elementSelector = Utils.createLambda(elementSelector);
-	        compareSelector = Utils.createLambda(compareSelector);
-	
-	        var dict = new Dictionary(compareSelector);
-	        this.forEach(function (x) {
-	            var key = keySelector(x);
-	            var element = elementSelector(x);
-	
-	            var array = dict.get(key);
-	            if (array !== undefined) array.push(element);
-	            else dict.add(key, [element]);
-	        });
-	        return new Lookup(dict);
-	    };
-	
-	    Enumerable.prototype.toObject = function (keySelector, elementSelector) {
-	        keySelector = Utils.createLambda(keySelector);
-	        elementSelector = Utils.createLambda(elementSelector);
-	
-	        var obj = {};
-	        this.forEach(function (x) {
-	            obj[keySelector(x)] = elementSelector(x);
-	        });
-	        return obj;
-	    };
-	
-	    // Overload:function(keySelector, elementSelector)
-	    // Overload:function(keySelector, elementSelector, compareSelector)
-	    Enumerable.prototype.toDictionary = function (keySelector, elementSelector, compareSelector) {
-	        keySelector = Utils.createLambda(keySelector);
-	        elementSelector = Utils.createLambda(elementSelector);
-	        compareSelector = Utils.createLambda(compareSelector);
-	
-	        var dict = new Dictionary(compareSelector);
-	        this.forEach(function (x) {
-	            dict.add(keySelector(x), elementSelector(x));
-	        });
-	        return dict;
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(replacer)
-	    // Overload:function(replacer, space)
-	    Enumerable.prototype.toJSONString = function (replacer, space) {
-	        if (typeof JSON === Types.Undefined || JSON.stringify == null) {
-	            throw new Error("toJSONString can't find JSON.stringify. This works native JSON support Browser or include json2.js");
-	        }
-	        return JSON.stringify(this.toArray(), replacer, space);
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(separator)
-	    // Overload:function(separator,selector)
-	    Enumerable.prototype.toJoinedString = function (separator, selector) {
-	        if (separator == null) separator = "";
-	        if (selector == null) selector = Functions.Identity;
-	
-	        return this.select(selector).toArray().join(separator);
-	    };
-	
-	
-	    /* Action Methods */
-	
-	    // Overload:function(action<element>)
-	    // Overload:function(action<element,index>)
-	    Enumerable.prototype.doAction = function (action) {
-	        var source = this;
-	        action = Utils.createLambda(action);
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	            var index = 0;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    if (enumerator.moveNext()) {
-	                        action(enumerator.current(), index++);
-	                        return this.yieldReturn(enumerator.current());
-	                    }
-	                    return false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    // Overload:function(action<element>)
-	    // Overload:function(action<element,index>)
-	    // Overload:function(func<element,bool>)
-	    // Overload:function(func<element,index,bool>)
-	    Enumerable.prototype.forEach = function (action) {
-	        action = Utils.createLambda(action);
-	
-	        var index = 0;
-	        var enumerator = this.getEnumerator();
-	        try {
-	            while (enumerator.moveNext()) {
-	                if (action(enumerator.current(), index++) === false) break;
-	            }
-	        } finally {
-	            Utils.dispose(enumerator);
-	        }
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(separator)
-	    // Overload:function(separator,selector)
-	    Enumerable.prototype.write = function (separator, selector) {
-	        if (separator == null) separator = "";
-	        selector = Utils.createLambda(selector);
-	
-	        var isFirst = true;
-	        this.forEach(function (item) {
-	            if (isFirst) isFirst = false;
-	            else document.write(separator);
-	            document.write(selector(item));
-	        });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(selector)
-	    Enumerable.prototype.writeLine = function (selector) {
-	        selector = Utils.createLambda(selector);
-	
-	        this.forEach(function (item) {
-	            document.writeln(selector(item) + "<br />");
-	        });
-	    };
-	
-	    Enumerable.prototype.force = function () {
-	        var enumerator = this.getEnumerator();
-	
-	        try {
-	            while (enumerator.moveNext()) {
-	            }
-	        }
-	        finally {
-	            Utils.dispose(enumerator);
-	        }
-	    };
-	
-	    /* Functional Methods */
-	
-	    Enumerable.prototype.letBind = function (func) {
-	        func = Utils.createLambda(func);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () {
-	                    enumerator = Enumerable.from(func(source)).getEnumerator();
-	                },
-	                function () {
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(enumerator.current())
-	                        : false;
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    Enumerable.prototype.share = function () {
-	        var source = this;
-	        var sharedEnumerator;
-	        var disposed = false;
-	
-	        return new DisposableEnumerable(function () {
-	            return new IEnumerator(
-	                function () {
-	                    if (sharedEnumerator == null) {
-	                        sharedEnumerator = source.getEnumerator();
-	                    }
-	                },
-	                function () {
-	                    if (disposed) throw new Error("enumerator is disposed");
-	
-	                    return (sharedEnumerator.moveNext())
-	                        ? this.yieldReturn(sharedEnumerator.current())
-	                        : false;
-	                },
-	                Functions.Blank
-	            );
-	        }, function () {
-	            disposed = true;
-	            Utils.dispose(sharedEnumerator);
-	        });
-	    };
-	
-	    Enumerable.prototype.memoize = function () {
-	        var source = this;
-	        var cache;
-	        var enumerator;
-	        var disposed = false;
-	
-	        return new DisposableEnumerable(function () {
-	            var index = -1;
-	
-	            return new IEnumerator(
-	                function () {
-	                    if (enumerator == null) {
-	                        enumerator = source.getEnumerator();
-	                        cache = [];
-	                    }
-	                },
-	                function () {
-	                    if (disposed) throw new Error("enumerator is disposed");
-	
-	                    index++;
-	                    if (cache.length <= index) {
-	                        return (enumerator.moveNext())
-	                            ? this.yieldReturn(cache[index] = enumerator.current())
-	                            : false;
-	                    }
-	
-	                    return this.yieldReturn(cache[index]);
-	                },
-	                Functions.Blank
-	            );
-	        }, function () {
-	            disposed = true;
-	            Utils.dispose(enumerator);
-	            cache = null;
-	        });
-	    };
-	
-	    /* Error Handling Methods */
-	
-	    Enumerable.prototype.catchError = function (handler) {
-	        handler = Utils.createLambda(handler);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    try {
-	                        return (enumerator.moveNext())
-	                            ? this.yieldReturn(enumerator.current())
-	                            : false;
-	                    } catch (e) {
-	                        handler(e);
-	                        return false;
-	                    }
-	                },
-	                function () { Utils.dispose(enumerator); });
-	        });
-	    };
-	
-	    Enumerable.prototype.finallyAction = function (finallyAction) {
-	        finallyAction = Utils.createLambda(finallyAction);
-	        var source = this;
-	
-	        return new Enumerable(function () {
-	            var enumerator;
-	
-	            return new IEnumerator(
-	                function () { enumerator = source.getEnumerator(); },
-	                function () {
-	                    return (enumerator.moveNext())
-	                        ? this.yieldReturn(enumerator.current())
-	                        : false;
-	                },
-	                function () {
-	                    try {
-	                        Utils.dispose(enumerator);
-	                    } finally {
-	                        finallyAction();
-	                    }
-	                });
-	        });
-	    };
-	
-	    /* For Debug Methods */
-	
-	    // Overload:function()
-	    // Overload:function(selector)
-	    Enumerable.prototype.log = function (selector) {
-	        selector = Utils.createLambda(selector);
-	
-	        return this.doAction(function (item) {
-	            if (typeof console !== Types.Undefined) {
-	                console.log(selector(item));
-	            }
-	        });
-	    };
-	
-	    // Overload:function()
-	    // Overload:function(message)
-	    // Overload:function(message,selector)
-	    Enumerable.prototype.trace = function (message, selector) {
-	        if (message == null) message = "Trace";
-	        selector = Utils.createLambda(selector);
-	
-	        return this.doAction(function (item) {
-	            if (typeof console !== Types.Undefined) {
-	                console.log(message, selector(item));
-	            }
-	        });
-	    };
-	
-	    // private
-	
-	    var OrderedEnumerable = function (source, keySelector, descending, parent) {
-	        this.source = source;
-	        this.keySelector = Utils.createLambda(keySelector);
-	        this.descending = descending;
-	        this.parent = parent;
-	    };
-	    OrderedEnumerable.prototype = new Enumerable();
-	
-	    OrderedEnumerable.prototype.createOrderedEnumerable = function (keySelector, descending) {
-	        return new OrderedEnumerable(this.source, keySelector, descending, this);
-	    };
-	
-	    OrderedEnumerable.prototype.thenBy = function (keySelector) {
-	        return this.createOrderedEnumerable(keySelector, false);
-	    };
-	
-	    OrderedEnumerable.prototype.thenByDescending = function (keySelector) {
-	        return this.createOrderedEnumerable(keySelector, true);
-	    };
-	
-	    OrderedEnumerable.prototype.getEnumerator = function () {
-	        var self = this;
-	        var buffer;
-	        var indexes;
-	        var index = 0;
-	
-	        return new IEnumerator(
-	            function () {
-	                buffer = [];
-	                indexes = [];
-	                self.source.forEach(function (item, index) {
-	                    buffer.push(item);
-	                    indexes.push(index);
-	                });
-	                var sortContext = SortContext.create(self, null);
-	                sortContext.GenerateKeys(buffer);
-	
-	                indexes.sort(function (a, b) { return sortContext.compare(a, b); });
-	            },
-	            function () {
-	                return (index < indexes.length)
-	                    ? this.yieldReturn(buffer[indexes[index++]])
-	                    : false;
-	            },
-	            Functions.Blank
-	        );
-	    };
-	
-	    var SortContext = function (keySelector, descending, child) {
-	        this.keySelector = keySelector;
-	        this.descending = descending;
-	        this.child = child;
-	        this.keys = null;
-	    };
-	
-	    SortContext.create = function (orderedEnumerable, currentContext) {
-	        var context = new SortContext(orderedEnumerable.keySelector, orderedEnumerable.descending, currentContext);
-	        if (orderedEnumerable.parent != null) return SortContext.create(orderedEnumerable.parent, context);
-	        return context;
-	    };
-	
-	    SortContext.prototype.GenerateKeys = function (source) {
-	        var len = source.length;
-	        var keySelector = this.keySelector;
-	        var keys = new Array(len);
-	        for (var i = 0; i < len; i++) keys[i] = keySelector(source[i]);
-	        this.keys = keys;
-	
-	        if (this.child != null) this.child.GenerateKeys(source);
-	    };
-	
-	    SortContext.prototype.compare = function (index1, index2) {
-	        var comparison = Utils.compare(this.keys[index1], this.keys[index2]);
-	
-	        if (comparison == 0) {
-	            if (this.child != null) return this.child.compare(index1, index2);
-	            return Utils.compare(index1, index2);
-	        }
-	
-	        return (this.descending) ? -comparison : comparison;
-	    };
-	
-	    var DisposableEnumerable = function (getEnumerator, dispose) {
-	        this.dispose = dispose;
-	        Enumerable.call(this, getEnumerator);
-	    };
-	    DisposableEnumerable.prototype = new Enumerable();
-	
-	    // optimize array or arraylike object
-	
-	    var ArrayEnumerable = function (source) {
-	        this.getSource = function () { return source; };
-	    };
-	    ArrayEnumerable.prototype = new Enumerable();
-	
-	    ArrayEnumerable.prototype.any = function (predicate) {
-	        return (predicate == null)
-	            ? (this.getSource().length > 0)
-	            : Enumerable.prototype.any.apply(this, arguments);
-	    };
-	
-	    ArrayEnumerable.prototype.count = function (predicate) {
-	        return (predicate == null)
-	            ? this.getSource().length
-	            : Enumerable.prototype.count.apply(this, arguments);
-	    };
-	
-	    ArrayEnumerable.prototype.elementAt = function (index) {
-	        var source = this.getSource();
-	        return (0 <= index && index < source.length)
-	            ? source[index]
-	            : Enumerable.prototype.elementAt.apply(this, arguments);
-	    };
-	
-	    ArrayEnumerable.prototype.elementAtOrDefault = function (index, defaultValue) {
-	        if (defaultValue === undefined) defaultValue = null;
-	        var source = this.getSource();
-	        return (0 <= index && index < source.length)
-	            ? source[index]
-	            : defaultValue;
-	    };
-	
-	    ArrayEnumerable.prototype.first = function (predicate) {
-	        var source = this.getSource();
-	        return (predicate == null && source.length > 0)
-	            ? source[0]
-	            : Enumerable.prototype.first.apply(this, arguments);
-	    };
-	
-	    ArrayEnumerable.prototype.firstOrDefault = function (predicate, defaultValue) {
-	        if (defaultValue === undefined) defaultValue = null;
-	        if (predicate != null) {
-	            return Enumerable.prototype.firstOrDefault.apply(this, arguments);
-	        }
-	
-	        var source = this.getSource();
-	        return source.length > 0 ? source[0] : defaultValue;
-	    };
-	
-	    ArrayEnumerable.prototype.last = function (predicate) {
-	        var source = this.getSource();
-	        return (predicate == null && source.length > 0)
-	            ? source[source.length - 1]
-	            : Enumerable.prototype.last.apply(this, arguments);
-	    };
-	
-	    ArrayEnumerable.prototype.lastOrDefault = function (predicate, defaultValue) {
-	        if (defaultValue === undefined) defaultValue = null;
-	        if (predicate != null) {
-	            return Enumerable.prototype.lastOrDefault.apply(this, arguments);
-	        }
-	
-	        var source = this.getSource();
-	        return source.length > 0 ? source[source.length - 1] : defaultValue;
-	    };
-	
-	    ArrayEnumerable.prototype.skip = function (count) {
-	        var source = this.getSource();
-	
-	        return new Enumerable(function () {
-	            var index;
-	
-	            return new IEnumerator(
-	                function () { index = (count < 0) ? 0 : count; },
-	                function () {
-	                    return (index < source.length)
-	                        ? this.yieldReturn(source[index++])
-	                        : false;
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    ArrayEnumerable.prototype.takeExceptLast = function (count) {
-	        if (count == null) count = 1;
-	        return this.take(this.getSource().length - count);
-	    };
-	
-	    ArrayEnumerable.prototype.takeFromLast = function (count) {
-	        return this.skip(this.getSource().length - count);
-	    };
-	
-	    ArrayEnumerable.prototype.reverse = function () {
-	        var source = this.getSource();
-	
-	        return new Enumerable(function () {
-	            var index;
-	
-	            return new IEnumerator(
-	                function () {
-	                    index = source.length;
-	                },
-	                function () {
-	                    return (index > 0)
-	                        ? this.yieldReturn(source[--index])
-	                        : false;
-	                },
-	                Functions.Blank);
-	        });
-	    };
-	
-	    ArrayEnumerable.prototype.sequenceEqual = function (second, compareSelector) {
-	        if ((second instanceof ArrayEnumerable || second instanceof Array)
-	            && compareSelector == null
-	            && Enumerable.from(second).count() != this.count()) {
-	            return false;
-	        }
-	
-	        return Enumerable.prototype.sequenceEqual.apply(this, arguments);
-	    };
-	
-	    ArrayEnumerable.prototype.toJoinedString = function (separator, selector) {
-	        var source = this.getSource();
-	        if (selector != null || !(source instanceof Array)) {
-	            return Enumerable.prototype.toJoinedString.apply(this, arguments);
-	        }
-	
-	        if (separator == null) separator = "";
-	        return source.join(separator);
-	    };
-	
-	    ArrayEnumerable.prototype.getEnumerator = function () {
-	        var source = this.getSource();
-	        var index = -1;
-	
-	        // fast and simple enumerator
-	        return {
-	            current: function () { return source[index]; },
-	            moveNext: function () {
-	                return ++index < source.length;
-	            },
-	            dispose: Functions.Blank
-	        };
-	    };
-	
-	    // optimization for multiple where and multiple select and whereselect
-	
-	    var WhereEnumerable = function (source, predicate) {
-	        this.prevSource = source;
-	        this.prevPredicate = predicate; // predicate.length always <= 1
-	    };
-	    WhereEnumerable.prototype = new Enumerable();
-	
-	    WhereEnumerable.prototype.where = function (predicate) {
-	        predicate = Utils.createLambda(predicate);
-	
-	        if (predicate.length <= 1) {
-	            var prevPredicate = this.prevPredicate;
-	            var composedPredicate = function (x) { return prevPredicate(x) && predicate(x); };
-	            return new WhereEnumerable(this.prevSource, composedPredicate);
-	        }
-	        else {
-	            // if predicate use index, can't compose
-	            return Enumerable.prototype.where.call(this, predicate);
-	        }
-	    };
-	
-	    WhereEnumerable.prototype.select = function (selector) {
-	        selector = Utils.createLambda(selector);
-	
-	        return (selector.length <= 1)
-	            ? new WhereSelectEnumerable(this.prevSource, this.prevPredicate, selector)
-	            : Enumerable.prototype.select.call(this, selector);
-	    };
-	
-	    WhereEnumerable.prototype.getEnumerator = function () {
-	        var predicate = this.prevPredicate;
-	        var source = this.prevSource;
-	        var enumerator;
-	
-	        return new IEnumerator(
-	            function () { enumerator = source.getEnumerator(); },
-	            function () {
-	                while (enumerator.moveNext()) {
-	                    if (predicate(enumerator.current())) {
-	                        return this.yieldReturn(enumerator.current());
-	                    }
-	                }
-	                return false;
-	            },
-	            function () { Utils.dispose(enumerator); });
-	    };
-	
-	    var WhereSelectEnumerable = function (source, predicate, selector) {
-	        this.prevSource = source;
-	        this.prevPredicate = predicate; // predicate.length always <= 1 or null
-	        this.prevSelector = selector; // selector.length always <= 1
-	    };
-	    WhereSelectEnumerable.prototype = new Enumerable();
-	
-	    WhereSelectEnumerable.prototype.where = function (predicate) {
-	        predicate = Utils.createLambda(predicate);
-	
-	        return (predicate.length <= 1)
-	            ? new WhereEnumerable(this, predicate)
-	            : Enumerable.prototype.where.call(this, predicate);
-	    };
-	
-	    WhereSelectEnumerable.prototype.select = function (selector) {
-	        selector = Utils.createLambda(selector);
-	
-	        if (selector.length <= 1) {
-	            var prevSelector = this.prevSelector;
-	            var composedSelector = function (x) { return selector(prevSelector(x)); };
-	            return new WhereSelectEnumerable(this.prevSource, this.prevPredicate, composedSelector);
-	        }
-	        else {
-	            // if selector use index, can't compose
-	            return Enumerable.prototype.select.call(this, selector);
-	        }
-	    };
-	
-	    WhereSelectEnumerable.prototype.getEnumerator = function () {
-	        var predicate = this.prevPredicate;
-	        var selector = this.prevSelector;
-	        var source = this.prevSource;
-	        var enumerator;
-	
-	        return new IEnumerator(
-	            function () { enumerator = source.getEnumerator(); },
-	            function () {
-	                while (enumerator.moveNext()) {
-	                    if (predicate == null || predicate(enumerator.current())) {
-	                        return this.yieldReturn(selector(enumerator.current()));
-	                    }
-	                }
-	                return false;
-	            },
-	            function () { Utils.dispose(enumerator); });
-	    };
-	
-	    // Collections
-	
-	    var Dictionary = (function () {
-	        // static utility methods
-	        var callHasOwnProperty = function (target, key) {
-	            return Object.prototype.hasOwnProperty.call(target, key);
-	        };
-	
-	        var computeHashCode = function (obj) {
-	            if (obj === null) return "null";
-	            if (obj === undefined) return "undefined";
-	
-	            return (typeof obj.toString === Types.Function)
-	                ? obj.toString()
-	                : Object.prototype.toString.call(obj);
-	        };
-	
-	        // LinkedList for Dictionary
-	        var HashEntry = function (key, value) {
-	            this.key = key;
-	            this.value = value;
-	            this.prev = null;
-	            this.next = null;
-	        };
-	
-	        var EntryList = function () {
-	            this.first = null;
-	            this.last = null;
-	        };
-	        EntryList.prototype =
-	        {
-	            addLast: function (entry) {
-	                if (this.last != null) {
-	                    this.last.next = entry;
-	                    entry.prev = this.last;
-	                    this.last = entry;
-	                } else this.first = this.last = entry;
-	            },
-	
-	            replace: function (entry, newEntry) {
-	                if (entry.prev != null) {
-	                    entry.prev.next = newEntry;
-	                    newEntry.prev = entry.prev;
-	                } else this.first = newEntry;
-	
-	                if (entry.next != null) {
-	                    entry.next.prev = newEntry;
-	                    newEntry.next = entry.next;
-	                } else this.last = newEntry;
-	
-	            },
-	
-	            remove: function (entry) {
-	                if (entry.prev != null) entry.prev.next = entry.next;
-	                else this.first = entry.next;
-	
-	                if (entry.next != null) entry.next.prev = entry.prev;
-	                else this.last = entry.prev;
-	            }
-	        };
-	
-	        // Overload:function()
-	        // Overload:function(compareSelector)
-	        var Dictionary = function (compareSelector) {
-	            this.countField = 0;
-	            this.entryList = new EntryList();
-	            this.buckets = {}; // as Dictionary<string,List<object>>
-	            this.compareSelector = (compareSelector == null) ? Functions.Identity : compareSelector;
-	        };
-	        Dictionary.prototype =
-	        {
-	            add: function (key, value) {
-	                var compareKey = this.compareSelector(key);
-	                var hash = computeHashCode(compareKey);
-	                var entry = new HashEntry(key, value);
-	                if (callHasOwnProperty(this.buckets, hash)) {
-	                    var array = this.buckets[hash];
-	                    for (var i = 0; i < array.length; i++) {
-	                        if (this.compareSelector(array[i].key) === compareKey) {
-	                            this.entryList.replace(array[i], entry);
-	                            array[i] = entry;
-	                            return;
-	                        }
-	                    }
-	                    array.push(entry);
-	                } else {
-	                    this.buckets[hash] = [entry];
-	                }
-	                this.countField++;
-	                this.entryList.addLast(entry);
-	            },
-	
-	            get: function (key) {
-	                var compareKey = this.compareSelector(key);
-	                var hash = computeHashCode(compareKey);
-	                if (!callHasOwnProperty(this.buckets, hash)) return undefined;
-	
-	                var array = this.buckets[hash];
-	                for (var i = 0; i < array.length; i++) {
-	                    var entry = array[i];
-	                    if (this.compareSelector(entry.key) === compareKey) return entry.value;
-	                }
-	                return undefined;
-	            },
-	
-	            set: function (key, value) {
-	                var compareKey = this.compareSelector(key);
-	                var hash = computeHashCode(compareKey);
-	                if (callHasOwnProperty(this.buckets, hash)) {
-	                    var array = this.buckets[hash];
-	                    for (var i = 0; i < array.length; i++) {
-	                        if (this.compareSelector(array[i].key) === compareKey) {
-	                            var newEntry = new HashEntry(key, value);
-	                            this.entryList.replace(array[i], newEntry);
-	                            array[i] = newEntry;
-	                            return true;
-	                        }
-	                    }
-	                }
-	                return false;
-	            },
-	
-	            contains: function (key) {
-	                var compareKey = this.compareSelector(key);
-	                var hash = computeHashCode(compareKey);
-	                if (!callHasOwnProperty(this.buckets, hash)) return false;
-	
-	                var array = this.buckets[hash];
-	                for (var i = 0; i < array.length; i++) {
-	                    if (this.compareSelector(array[i].key) === compareKey) return true;
-	                }
-	                return false;
-	            },
-	
-	            clear: function () {
-	                this.countField = 0;
-	                this.buckets = {};
-	                this.entryList = new EntryList();
-	            },
-	
-	            remove: function (key) {
-	                var compareKey = this.compareSelector(key);
-	                var hash = computeHashCode(compareKey);
-	                if (!callHasOwnProperty(this.buckets, hash)) return;
-	
-	                var array = this.buckets[hash];
-	                for (var i = 0; i < array.length; i++) {
-	                    if (this.compareSelector(array[i].key) === compareKey) {
-	                        this.entryList.remove(array[i]);
-	                        array.splice(i, 1);
-	                        if (array.length == 0) delete this.buckets[hash];
-	                        this.countField--;
-	                        return;
-	                    }
-	                }
-	            },
-	
-	            count: function () {
-	                return this.countField;
-	            },
-	
-	            toEnumerable: function () {
-	                var self = this;
-	                return new Enumerable(function () {
-	                    var currentEntry;
-	
-	                    return new IEnumerator(
-	                        function () { currentEntry = self.entryList.first; },
-	                        function () {
-	                            if (currentEntry != null) {
-	                                var result = { key: currentEntry.key, value: currentEntry.value };
-	                                currentEntry = currentEntry.next;
-	                                return this.yieldReturn(result);
-	                            }
-	                            return false;
-	                        },
-	                        Functions.Blank);
-	                });
-	            }
-	        };
-	
-	        return Dictionary;
-	    })();
-	
-	    // dictionary = Dictionary<TKey, TValue[]>
-	    var Lookup = function (dictionary) {
-	        this.count = function () {
-	            return dictionary.count();
-	        };
-	        this.get = function (key) {
-	            return Enumerable.from(dictionary.get(key));
-	        };
-	        this.contains = function (key) {
-	            return dictionary.contains(key);
-	        };
-	        this.toEnumerable = function () {
-	            return dictionary.toEnumerable().select(function (kvp) {
-	                return new Grouping(kvp.key, kvp.value);
-	            });
-	        };
-	    };
-	
-	    var Grouping = function (groupKey, elements) {
-	        this.key = function () {
-	            return groupKey;
-	        };
-	        ArrayEnumerable.call(this, elements);
-	    };
-	    Grouping.prototype = new ArrayEnumerable();
-	
-	    // module export
-	    if ("function" === Types.Function && __webpack_require__(272)) { // AMD
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () { return Enumerable; }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	    }
-	    else if (typeof module !== Types.Undefined && module.exports) { // Node
-	        module.exports = Enumerable;
-	    }
-	    else {
-	        root.Enumerable = Enumerable;
-	    }
-	})(this);
+	module.exports = __webpack_require__(274);
 
 /***/ },
-/* 272 */
+/* 274 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _innerSlider = __webpack_require__(275);
+	
+	var _objectAssign = __webpack_require__(4);
+	
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+	
+	var _json2mq = __webpack_require__(285);
+	
+	var _json2mq2 = _interopRequireDefault(_json2mq);
+	
+	var _reactResponsiveMixin = __webpack_require__(287);
+	
+	var _reactResponsiveMixin2 = _interopRequireDefault(_reactResponsiveMixin);
+	
+	var _defaultProps = __webpack_require__(280);
+	
+	var _defaultProps2 = _interopRequireDefault(_defaultProps);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var Slider = _react2.default.createClass({
+	  displayName: 'Slider',
+	
+	  mixins: [_reactResponsiveMixin2.default],
+	  innerSlider: null,
+	  innerSliderRefHandler: function innerSliderRefHandler(ref) {
+	    this.innerSlider = ref;
+	  },
+	  getInitialState: function getInitialState() {
+	    return {
+	      breakpoint: null
+	    };
+	  },
+	  componentWillMount: function componentWillMount() {
+	    var _this = this;
+	
+	    if (this.props.responsive) {
+	      var breakpoints = this.props.responsive.map(function (breakpt) {
+	        return breakpt.breakpoint;
+	      });
+	      breakpoints.sort(function (x, y) {
+	        return x - y;
+	      });
+	
+	      breakpoints.forEach(function (breakpoint, index) {
+	        var bQuery;
+	        if (index === 0) {
+	          bQuery = (0, _json2mq2.default)({ minWidth: 0, maxWidth: breakpoint });
+	        } else {
+	          bQuery = (0, _json2mq2.default)({ minWidth: breakpoints[index - 1], maxWidth: breakpoint });
+	        }
+	        _this.media(bQuery, function () {
+	          _this.setState({ breakpoint: breakpoint });
+	        });
+	      });
+	
+	      // Register media query for full screen. Need to support resize from small to large
+	      var query = (0, _json2mq2.default)({ minWidth: breakpoints.slice(-1)[0] });
+	
+	      this.media(query, function () {
+	        _this.setState({ breakpoint: null });
+	      });
+	    }
+	  },
+	
+	  slickPrev: function slickPrev() {
+	    this.innerSlider.slickPrev();
+	  },
+	
+	  slickNext: function slickNext() {
+	    this.innerSlider.slickNext();
+	  },
+	
+	  slickGoTo: function slickGoTo(slide) {
+	    this.innerSlider.slickGoTo(slide);
+	  },
+	
+	  render: function render() {
+	    var _this2 = this;
+	
+	    var settings;
+	    var newProps;
+	    if (this.state.breakpoint) {
+	      newProps = this.props.responsive.filter(function (resp) {
+	        return resp.breakpoint === _this2.state.breakpoint;
+	      });
+	      settings = newProps[0].settings === 'unslick' ? 'unslick' : (0, _objectAssign2.default)({}, this.props, newProps[0].settings);
+	    } else {
+	      settings = (0, _objectAssign2.default)({}, _defaultProps2.default, this.props);
+	    }
+	
+	    var children = this.props.children;
+	    if (!Array.isArray(children)) {
+	      children = [children];
+	    }
+	
+	    // Children may contain false or null, so we should filter them
+	    children = children.filter(function (child) {
+	      return !!child;
+	    });
+	
+	    if (settings === 'unslick') {
+	      // if 'unslick' responsive breakpoint setting used, just return the <Slider> tag nested HTML
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        children
+	      );
+	    } else {
+	      return _react2.default.createElement(
+	        _innerSlider.InnerSlider,
+	        _extends({ ref: this.innerSliderRefHandler }, settings),
+	        children
+	      );
+	    }
+	  }
+	});
+	
+	module.exports = Slider;
+
+/***/ },
+/* 275 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
+	
+	exports.__esModule = true;
+	exports.InnerSlider = undefined;
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _eventHandlers = __webpack_require__(276);
+	
+	var _eventHandlers2 = _interopRequireDefault(_eventHandlers);
+	
+	var _helpers = __webpack_require__(278);
+	
+	var _helpers2 = _interopRequireDefault(_helpers);
+	
+	var _initialState = __webpack_require__(279);
+	
+	var _initialState2 = _interopRequireDefault(_initialState);
+	
+	var _defaultProps = __webpack_require__(280);
+	
+	var _defaultProps2 = _interopRequireDefault(_defaultProps);
+	
+	var _classnames = __webpack_require__(281);
+	
+	var _classnames2 = _interopRequireDefault(_classnames);
+	
+	var _objectAssign = __webpack_require__(4);
+	
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+	
+	var _track = __webpack_require__(282);
+	
+	var _dots = __webpack_require__(283);
+	
+	var _arrows = __webpack_require__(284);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var InnerSlider = exports.InnerSlider = _react2.default.createClass({
+	  displayName: 'InnerSlider',
+	
+	  mixins: [_helpers2.default, _eventHandlers2.default],
+	  list: null,
+	  track: null,
+	  listRefHandler: function listRefHandler(ref) {
+	    this.list = ref;
+	  },
+	  trackRefHandler: function trackRefHandler(ref) {
+	    this.track = ref;
+	  },
+	  getInitialState: function getInitialState() {
+	    return _extends({}, _initialState2.default, {
+	      currentSlide: this.props.initialSlide
+	    });
+	  },
+	  getDefaultProps: function getDefaultProps() {
+	    return _defaultProps2.default;
+	  },
+	  componentWillMount: function componentWillMount() {
+	    if (this.props.init) {
+	      this.props.init();
+	    }
+	    this.setState({
+	      mounted: true
+	    });
+	    var lazyLoadedList = [];
+	    for (var i = 0; i < _react2.default.Children.count(this.props.children); i++) {
+	      if (i >= this.state.currentSlide && i < this.state.currentSlide + this.props.slidesToShow) {
+	        lazyLoadedList.push(i);
+	      }
+	    }
+	
+	    if (this.props.lazyLoad && this.state.lazyLoadedList.length === 0) {
+	      this.setState({
+	        lazyLoadedList: lazyLoadedList
+	      });
+	    }
+	  },
+	  componentDidMount: function componentDidMount() {
+	    // Hack for autoplay -- Inspect Later
+	    this.initialize(this.props);
+	    this.adaptHeight();
+	
+	    // To support server-side rendering
+	    if (!window) {
+	      return;
+	    }
+	    if (window.addEventListener) {
+	      window.addEventListener('resize', this.onWindowResized);
+	    } else {
+	      window.attachEvent('onresize', this.onWindowResized);
+	    }
+	  },
+	  componentWillUnmount: function componentWillUnmount() {
+	    if (this.animationEndCallback) {
+	      clearTimeout(this.animationEndCallback);
+	    }
+	    if (window.addEventListener) {
+	      window.removeEventListener('resize', this.onWindowResized);
+	    } else {
+	      window.detachEvent('onresize', this.onWindowResized);
+	    }
+	    if (this.state.autoPlayTimer) {
+	      clearInterval(this.state.autoPlayTimer);
+	    }
+	  },
+	  componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	    if (this.props.slickGoTo != nextProps.slickGoTo) {
+	      if (process.env.NODE_ENV !== 'production') {
+	        console.warn('react-slick deprecation warning: slickGoTo prop is deprecated and it will be removed in next release. Use slickGoTo method instead');
+	      }
+	      this.changeSlide({
+	        message: 'index',
+	        index: nextProps.slickGoTo,
+	        currentSlide: this.state.currentSlide
+	      });
+	    } else if (this.state.currentSlide >= nextProps.children.length) {
+	      this.update(nextProps);
+	      this.changeSlide({
+	        message: 'index',
+	        index: nextProps.children.length - nextProps.slidesToShow,
+	        currentSlide: this.state.currentSlide
+	      });
+	    } else {
+	      this.update(nextProps);
+	    }
+	  },
+	  componentDidUpdate: function componentDidUpdate() {
+	    this.adaptHeight();
+	  },
+	  onWindowResized: function onWindowResized() {
+	    this.update(this.props);
+	    // animating state should be cleared while resizing, otherwise autoplay stops working
+	    this.setState({
+	      animating: false
+	    });
+	    clearTimeout(this.animationEndCallback);
+	    delete this.animationEndCallback;
+	  },
+	  slickPrev: function slickPrev() {
+	    this.changeSlide({ message: 'previous' });
+	  },
+	  slickNext: function slickNext() {
+	    this.changeSlide({ message: 'next' });
+	  },
+	  slickGoTo: function slickGoTo(slide) {
+	    typeof slide === 'number' && this.changeSlide({
+	      message: 'index',
+	      index: slide,
+	      currentSlide: this.state.currentSlide
+	    });
+	  },
+	  render: function render() {
+	    var className = (0, _classnames2.default)('slick-initialized', 'slick-slider', this.props.className, {
+	      'slick-vertical': this.props.vertical
+	    });
+	
+	    var trackProps = {
+	      fade: this.props.fade,
+	      cssEase: this.props.cssEase,
+	      speed: this.props.speed,
+	      infinite: this.props.infinite,
+	      centerMode: this.props.centerMode,
+	      focusOnSelect: this.props.focusOnSelect ? this.selectHandler : null,
+	      currentSlide: this.state.currentSlide,
+	      lazyLoad: this.props.lazyLoad,
+	      lazyLoadedList: this.state.lazyLoadedList,
+	      rtl: this.props.rtl,
+	      slideWidth: this.state.slideWidth,
+	      slidesToShow: this.props.slidesToShow,
+	      slidesToScroll: this.props.slidesToScroll,
+	      slideCount: this.state.slideCount,
+	      trackStyle: this.state.trackStyle,
+	      variableWidth: this.props.variableWidth
+	    };
+	
+	    var dots;
+	
+	    if (this.props.dots === true && this.state.slideCount >= this.props.slidesToShow) {
+	      var dotProps = {
+	        dotsClass: this.props.dotsClass,
+	        slideCount: this.state.slideCount,
+	        slidesToShow: this.props.slidesToShow,
+	        currentSlide: this.state.currentSlide,
+	        slidesToScroll: this.props.slidesToScroll,
+	        clickHandler: this.changeSlide,
+	        children: this.props.children,
+	        customPaging: this.props.customPaging
+	      };
+	
+	      dots = _react2.default.createElement(_dots.Dots, dotProps);
+	    }
+	
+	    var prevArrow, nextArrow;
+	
+	    var arrowProps = {
+	      infinite: this.props.infinite,
+	      centerMode: this.props.centerMode,
+	      currentSlide: this.state.currentSlide,
+	      slideCount: this.state.slideCount,
+	      slidesToShow: this.props.slidesToShow,
+	      prevArrow: this.props.prevArrow,
+	      nextArrow: this.props.nextArrow,
+	      clickHandler: this.changeSlide
+	    };
+	
+	    if (this.props.arrows) {
+	      prevArrow = _react2.default.createElement(_arrows.PrevArrow, arrowProps);
+	      nextArrow = _react2.default.createElement(_arrows.NextArrow, arrowProps);
+	    }
+	
+	    var verticalHeightStyle = null;
+	
+	    if (this.props.vertical) {
+	      verticalHeightStyle = {
+	        height: this.state.listHeight
+	      };
+	    }
+	
+	    var centerPaddingStyle = null;
+	
+	    if (this.props.vertical === false) {
+	      if (this.props.centerMode === true) {
+	        centerPaddingStyle = {
+	          padding: '0px ' + this.props.centerPadding
+	        };
+	      }
+	    } else {
+	      if (this.props.centerMode === true) {
+	        centerPaddingStyle = {
+	          padding: this.props.centerPadding + ' 0px'
+	        };
+	      }
+	    }
+	
+	    var listStyle = (0, _objectAssign2.default)({}, verticalHeightStyle, centerPaddingStyle);
+	
+	    return _react2.default.createElement(
+	      'div',
+	      { className: className, onMouseEnter: this.onInnerSliderEnter, onMouseLeave: this.onInnerSliderLeave },
+	      prevArrow,
+	      _react2.default.createElement(
+	        'div',
+	        {
+	          ref: this.listRefHandler,
+	          className: 'slick-list',
+	          style: listStyle,
+	          onMouseDown: this.swipeStart,
+	          onMouseMove: this.state.dragging ? this.swipeMove : null,
+	          onMouseUp: this.swipeEnd,
+	          onMouseLeave: this.state.dragging ? this.swipeEnd : null,
+	          onTouchStart: this.swipeStart,
+	          onTouchMove: this.state.dragging ? this.swipeMove : null,
+	          onTouchEnd: this.swipeEnd,
+	          onTouchCancel: this.state.dragging ? this.swipeEnd : null,
+	          onKeyDown: this.props.accessibility ? this.keyHandler : null },
+	        _react2.default.createElement(
+	          _track.Track,
+	          _extends({ ref: this.trackRefHandler }, trackProps),
+	          this.props.children
+	        )
+	      ),
+	      nextArrow,
+	      dots
+	    );
+	  }
+	});
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 276 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	
+	var _trackHelper = __webpack_require__(277);
+	
+	var _helpers = __webpack_require__(278);
+	
+	var _helpers2 = _interopRequireDefault(_helpers);
+	
+	var _objectAssign = __webpack_require__(4);
+	
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+	
+	var _reactDom = __webpack_require__(34);
+	
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var EventHandlers = {
+	  // Event handler for previous and next
+	  changeSlide: function changeSlide(options) {
+	    var indexOffset, previousInt, slideOffset, unevenOffset, targetSlide;
+	    var _props = this.props;
+	    var slidesToScroll = _props.slidesToScroll;
+	    var slidesToShow = _props.slidesToShow;
+	    var _state = this.state;
+	    var slideCount = _state.slideCount;
+	    var currentSlide = _state.currentSlide;
+	
+	    unevenOffset = slideCount % slidesToScroll !== 0;
+	    indexOffset = unevenOffset ? 0 : (slideCount - currentSlide) % slidesToScroll;
+	
+	    if (options.message === 'previous') {
+	      slideOffset = indexOffset === 0 ? slidesToScroll : slidesToShow - indexOffset;
+	      targetSlide = currentSlide - slideOffset;
+	      if (this.props.lazyLoad) {
+	        previousInt = currentSlide - slideOffset;
+	        targetSlide = previousInt === -1 ? slideCount - 1 : previousInt;
+	      }
+	    } else if (options.message === 'next') {
+	      slideOffset = indexOffset === 0 ? slidesToScroll : indexOffset;
+	      targetSlide = currentSlide + slideOffset;
+	      if (this.props.lazyLoad) {
+	        targetSlide = (currentSlide + slidesToScroll) % slideCount + indexOffset;
+	      }
+	    } else if (options.message === 'dots' || options.message === 'children') {
+	      // Click on dots
+	      targetSlide = options.index * options.slidesToScroll;
+	      if (targetSlide === options.currentSlide) {
+	        return;
+	      }
+	    } else if (options.message === 'index') {
+	      targetSlide = parseInt(options.index);
+	      if (targetSlide === options.currentSlide) {
+	        return;
+	      }
+	    }
+	
+	    this.slideHandler(targetSlide);
+	  },
+	
+	  // Accessiblity handler for previous and next
+	  keyHandler: function keyHandler(e) {
+	    //Dont slide if the cursor is inside the form fields and arrow keys are pressed
+	    if (!e.target.tagName.match('TEXTAREA|INPUT|SELECT')) {
+	      if (e.keyCode === 37 && this.props.accessibility === true) {
+	        this.changeSlide({
+	          message: this.props.rtl === true ? 'next' : 'previous'
+	        });
+	      } else if (e.keyCode === 39 && this.props.accessibility === true) {
+	        this.changeSlide({
+	          message: this.props.rtl === true ? 'previous' : 'next'
+	        });
+	      }
+	    }
+	  },
+	  // Focus on selecting a slide (click handler on track)
+	  selectHandler: function selectHandler(options) {
+	    this.changeSlide(options);
+	  },
+	  swipeStart: function swipeStart(e) {
+	    var touches, posX, posY;
+	
+	    if (this.props.swipe === false || 'ontouchend' in document && this.props.swipe === false) {
+	      return;
+	    } else if (this.props.draggable === false && e.type.indexOf('mouse') !== -1) {
+	      return;
+	    }
+	    posX = e.touches !== undefined ? e.touches[0].pageX : e.clientX;
+	    posY = e.touches !== undefined ? e.touches[0].pageY : e.clientY;
+	    this.setState({
+	      dragging: true,
+	      touchObject: {
+	        startX: posX,
+	        startY: posY,
+	        curX: posX,
+	        curY: posY
+	      }
+	    });
+	  },
+	  swipeMove: function swipeMove(e) {
+	    if (!this.state.dragging) {
+	      e.preventDefault();
+	      return;
+	    }
+	    if (this.state.animating) {
+	      return;
+	    }
+	    if (this.props.vertical && this.props.swipeToSlide && this.props.verticalSwiping) {
+	      e.preventDefault();
+	    }
+	    var swipeLeft;
+	    var curLeft, positionOffset;
+	    var touchObject = this.state.touchObject;
+	
+	    curLeft = (0, _trackHelper.getTrackLeft)((0, _objectAssign2.default)({
+	      slideIndex: this.state.currentSlide,
+	      trackRef: this.track
+	    }, this.props, this.state));
+	    touchObject.curX = e.touches ? e.touches[0].pageX : e.clientX;
+	    touchObject.curY = e.touches ? e.touches[0].pageY : e.clientY;
+	    touchObject.swipeLength = Math.round(Math.sqrt(Math.pow(touchObject.curX - touchObject.startX, 2)));
+	
+	    if (this.props.verticalSwiping) {
+	      touchObject.swipeLength = Math.round(Math.sqrt(Math.pow(touchObject.curY - touchObject.startY, 2)));
+	    }
+	
+	    positionOffset = (this.props.rtl === false ? 1 : -1) * (touchObject.curX > touchObject.startX ? 1 : -1);
+	
+	    if (this.props.verticalSwiping) {
+	      positionOffset = touchObject.curY > touchObject.startY ? 1 : -1;
+	    }
+	
+	    var currentSlide = this.state.currentSlide;
+	    var dotCount = Math.ceil(this.state.slideCount / this.props.slidesToScroll);
+	    var swipeDirection = this.swipeDirection(this.state.touchObject);
+	    var touchSwipeLength = touchObject.swipeLength;
+	
+	    if (this.props.infinite === false) {
+	      if (currentSlide === 0 && swipeDirection === 'right' || currentSlide + 1 >= dotCount && swipeDirection === 'left') {
+	        touchSwipeLength = touchObject.swipeLength * this.props.edgeFriction;
+	
+	        if (this.state.edgeDragged === false && this.props.edgeEvent) {
+	          this.props.edgeEvent(swipeDirection);
+	          this.setState({ edgeDragged: true });
+	        }
+	      }
+	    }
+	
+	    if (this.state.swiped === false && this.props.swipeEvent) {
+	      this.props.swipeEvent(swipeDirection);
+	      this.setState({ swiped: true });
+	    }
+	
+	    if (!this.props.vertical) {
+	      swipeLeft = curLeft + touchSwipeLength * positionOffset;
+	    } else {
+	      swipeLeft = curLeft + touchSwipeLength * (this.state.listHeight / this.state.listWidth) * positionOffset;
+	    }
+	
+	    if (this.props.verticalSwiping) {
+	      swipeLeft = curLeft + touchSwipeLength * positionOffset;
+	    }
+	
+	    this.setState({
+	      touchObject: touchObject,
+	      swipeLeft: swipeLeft,
+	      trackStyle: (0, _trackHelper.getTrackCSS)((0, _objectAssign2.default)({ left: swipeLeft }, this.props, this.state))
+	    });
+	
+	    if (Math.abs(touchObject.curX - touchObject.startX) < Math.abs(touchObject.curY - touchObject.startY) * 0.8) {
+	      return;
+	    }
+	    if (touchObject.swipeLength > 4) {
+	      e.preventDefault();
+	    }
+	  },
+	  getNavigableIndexes: function getNavigableIndexes() {
+	    var max = void 0;
+	    var breakPoint = 0;
+	    var counter = 0;
+	    var indexes = [];
+	
+	    if (!this.props.infinite) {
+	      max = this.state.slideCount;
+	    } else {
+	      breakPoint = this.props.slidesToShow * -1;
+	      counter = this.props.slidesToShow * -1;
+	      max = this.state.slideCount * 2;
+	    }
+	
+	    while (breakPoint < max) {
+	      indexes.push(breakPoint);
+	      breakPoint = counter + this.props.slidesToScroll;
+	
+	      counter += this.props.slidesToScroll <= this.props.slidesToShow ? this.props.slidesToScroll : this.props.slidesToShow;
+	    }
+	
+	    return indexes;
+	  },
+	  checkNavigable: function checkNavigable(index) {
+	    var navigables = this.getNavigableIndexes();
+	    var prevNavigable = 0;
+	
+	    if (index > navigables[navigables.length - 1]) {
+	      index = navigables[navigables.length - 1];
+	    } else {
+	      for (var n in navigables) {
+	        if (index < navigables[n]) {
+	          index = prevNavigable;
+	          break;
+	        }
+	
+	        prevNavigable = navigables[n];
+	      }
+	    }
+	
+	    return index;
+	  },
+	  getSlideCount: function getSlideCount() {
+	    var _this = this;
+	
+	    var centerOffset = this.props.centerMode ? this.state.slideWidth * Math.floor(this.props.slidesToShow / 2) : 0;
+	
+	    if (this.props.swipeToSlide) {
+	      var swipedSlide = void 0;
+	
+	      var slickList = _reactDom2.default.findDOMNode(this.list);
+	
+	      var slides = slickList.querySelectorAll('.slick-slide');
+	
+	      Array.from(slides).every(function (slide) {
+	        if (!_this.props.vertical) {
+	          if (slide.offsetLeft - centerOffset + _this.getWidth(slide) / 2 > _this.state.swipeLeft * -1) {
+	            swipedSlide = slide;
+	            return false;
+	          }
+	        } else {
+	          if (slide.offsetTop + _this.getHeight(slide) / 2 > _this.state.swipeLeft * -1) {
+	            swipedSlide = slide;
+	            return false;
+	          }
+	        }
+	
+	        return true;
+	      });
+	
+	      var slidesTraversed = Math.abs(swipedSlide.dataset.index - this.state.currentSlide) || 1;
+	
+	      return slidesTraversed;
+	    } else {
+	      return this.props.slidesToScroll;
+	    }
+	  },
+	
+	  swipeEnd: function swipeEnd(e) {
+	    if (!this.state.dragging) {
+	      e.preventDefault();
+	      return;
+	    }
+	    var touchObject = this.state.touchObject;
+	    var minSwipe = this.state.listWidth / this.props.touchThreshold;
+	    var swipeDirection = this.swipeDirection(touchObject);
+	
+	    if (this.props.verticalSwiping) {
+	      minSwipe = this.state.listHeight / this.props.touchThreshold;
+	    }
+	
+	    // reset the state of touch related state variables.
+	    this.setState({
+	      dragging: false,
+	      edgeDragged: false,
+	      swiped: false,
+	      swipeLeft: null,
+	      touchObject: {}
+	    });
+	    // Fix for #13
+	    if (!touchObject.swipeLength) {
+	      return;
+	    }
+	    if (touchObject.swipeLength > minSwipe) {
+	      e.preventDefault();
+	
+	      var slideCount = void 0,
+	          newSlide = void 0;
+	
+	      switch (swipeDirection) {
+	
+	        case 'left':
+	        case 'down':
+	          newSlide = this.state.currentSlide + this.getSlideCount();
+	          slideCount = this.props.swipeToSlide ? this.checkNavigable(newSlide) : newSlide;
+	          this.state.currentDirection = 0;
+	          break;
+	
+	        case 'right':
+	        case 'up':
+	          newSlide = this.state.currentSlide - this.getSlideCount();
+	          slideCount = this.props.swipeToSlide ? this.checkNavigable(newSlide) : newSlide;
+	          this.state.currentDirection = 1;
+	          break;
+	
+	        default:
+	          slideCount = this.state.currentSlide;
+	
+	      }
+	
+	      this.slideHandler(slideCount);
+	    } else {
+	      // Adjust the track back to it's original position.
+	      var currentLeft = (0, _trackHelper.getTrackLeft)((0, _objectAssign2.default)({
+	        slideIndex: this.state.currentSlide,
+	        trackRef: this.track
+	      }, this.props, this.state));
+	
+	      this.setState({
+	        trackStyle: (0, _trackHelper.getTrackAnimateCSS)((0, _objectAssign2.default)({ left: currentLeft }, this.props, this.state))
+	      });
+	    }
+	  },
+	  onInnerSliderEnter: function onInnerSliderEnter(e) {
+	    if (this.props.autoplay && this.props.pauseOnHover) {
+	      this.pause();
+	    }
+	  },
+	  onInnerSliderLeave: function onInnerSliderLeave(e) {
+	    if (this.props.autoplay && this.props.pauseOnHover) {
+	      this.autoPlay();
+	    }
+	  }
+	};
+	
+	exports.default = EventHandlers;
+
+/***/ },
+/* 277 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	exports.getTrackLeft = exports.getTrackAnimateCSS = exports.getTrackCSS = undefined;
+	
+	var _reactDom = __webpack_require__(34);
+	
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+	
+	var _objectAssign = __webpack_require__(4);
+	
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var checkSpecKeys = function checkSpecKeys(spec, keysArray) {
+	  return keysArray.reduce(function (value, key) {
+	    return value && spec.hasOwnProperty(key);
+	  }, true) ? null : console.error('Keys Missing', spec);
+	};
+	
+	var getTrackCSS = exports.getTrackCSS = function getTrackCSS(spec) {
+	  checkSpecKeys(spec, ['left', 'variableWidth', 'slideCount', 'slidesToShow', 'slideWidth']);
+	
+	  var trackWidth, trackHeight;
+	
+	  var trackChildren = spec.slideCount + 2 * spec.slidesToShow;
+	
+	  if (!spec.vertical) {
+	    if (spec.variableWidth) {
+	      trackWidth = (spec.slideCount + 2 * spec.slidesToShow) * spec.slideWidth;
+	    } else if (spec.centerMode) {
+	      trackWidth = (spec.slideCount + 2 * (spec.slidesToShow + 1)) * spec.slideWidth;
+	    } else {
+	      trackWidth = (spec.slideCount + 2 * spec.slidesToShow) * spec.slideWidth;
+	    }
+	  } else {
+	    trackHeight = trackChildren * spec.slideHeight;
+	  }
+	
+	  var style = {
+	    opacity: 1,
+	    WebkitTransform: !spec.vertical ? 'translate3d(' + spec.left + 'px, 0px, 0px)' : 'translate3d(0px, ' + spec.left + 'px, 0px)',
+	    transform: !spec.vertical ? 'translate3d(' + spec.left + 'px, 0px, 0px)' : 'translate3d(0px, ' + spec.left + 'px, 0px)',
+	    transition: '',
+	    WebkitTransition: '',
+	    msTransform: !spec.vertical ? 'translateX(' + spec.left + 'px)' : 'translateY(' + spec.left + 'px)'
+	  };
+	
+	  if (trackWidth) {
+	    (0, _objectAssign2.default)(style, { width: trackWidth });
+	  }
+	
+	  if (trackHeight) {
+	    (0, _objectAssign2.default)(style, { height: trackHeight });
+	  }
+	
+	  // Fallback for IE8
+	  if (window && !window.addEventListener && window.attachEvent) {
+	    if (!spec.vertical) {
+	      style.marginLeft = spec.left + 'px';
+	    } else {
+	      style.marginTop = spec.left + 'px';
+	    }
+	  }
+	
+	  return style;
+	};
+	
+	var getTrackAnimateCSS = exports.getTrackAnimateCSS = function getTrackAnimateCSS(spec) {
+	  checkSpecKeys(spec, ['left', 'variableWidth', 'slideCount', 'slidesToShow', 'slideWidth', 'speed', 'cssEase']);
+	
+	  var style = getTrackCSS(spec);
+	  // useCSS is true by default so it can be undefined
+	  style.WebkitTransition = '-webkit-transform ' + spec.speed + 'ms ' + spec.cssEase;
+	  style.transition = 'transform ' + spec.speed + 'ms ' + spec.cssEase;
+	  return style;
+	};
+	
+	var getTrackLeft = exports.getTrackLeft = function getTrackLeft(spec) {
+	
+	  checkSpecKeys(spec, ['slideIndex', 'trackRef', 'infinite', 'centerMode', 'slideCount', 'slidesToShow', 'slidesToScroll', 'slideWidth', 'listWidth', 'variableWidth', 'slideHeight']);
+	
+	  var slideOffset = 0;
+	  var targetLeft;
+	  var targetSlide;
+	  var verticalOffset = 0;
+	
+	  if (spec.fade) {
+	    return 0;
+	  }
+	
+	  if (spec.infinite) {
+	    if (spec.slideCount >= spec.slidesToShow) {
+	      slideOffset = spec.slideWidth * spec.slidesToShow * -1;
+	      verticalOffset = spec.slideHeight * spec.slidesToShow * -1;
+	    }
+	    if (spec.slideCount % spec.slidesToScroll !== 0) {
+	      if (spec.slideIndex + spec.slidesToScroll > spec.slideCount && spec.slideCount > spec.slidesToShow) {
+	        if (spec.slideIndex > spec.slideCount) {
+	          slideOffset = (spec.slidesToShow - (spec.slideIndex - spec.slideCount)) * spec.slideWidth * -1;
+	          verticalOffset = (spec.slidesToShow - (spec.slideIndex - spec.slideCount)) * spec.slideHeight * -1;
+	        } else {
+	          slideOffset = spec.slideCount % spec.slidesToScroll * spec.slideWidth * -1;
+	          verticalOffset = spec.slideCount % spec.slidesToScroll * spec.slideHeight * -1;
+	        }
+	      }
+	    }
+	  } else {
+	
+	    if (spec.slideCount % spec.slidesToScroll !== 0) {
+	      if (spec.slideIndex + spec.slidesToScroll > spec.slideCount && spec.slideCount > spec.slidesToShow) {
+	        var slidesToOffset = spec.slidesToShow - spec.slideCount % spec.slidesToScroll;
+	        slideOffset = slidesToOffset * spec.slideWidth;
+	      }
+	    }
+	  }
+	
+	  if (spec.centerMode) {
+	    if (spec.infinite) {
+	      slideOffset += spec.slideWidth * Math.floor(spec.slidesToShow / 2);
+	    } else {
+	      slideOffset = spec.slideWidth * Math.floor(spec.slidesToShow / 2);
+	    }
+	  }
+	
+	  if (!spec.vertical) {
+	    targetLeft = spec.slideIndex * spec.slideWidth * -1 + slideOffset;
+	  } else {
+	    targetLeft = spec.slideIndex * spec.slideHeight * -1 + verticalOffset;
+	  }
+	
+	  if (spec.variableWidth === true) {
+	    var targetSlideIndex;
+	    if (spec.slideCount <= spec.slidesToShow || spec.infinite === false) {
+	      targetSlide = _reactDom2.default.findDOMNode(spec.trackRef).childNodes[spec.slideIndex];
+	    } else {
+	      targetSlideIndex = spec.slideIndex + spec.slidesToShow;
+	      targetSlide = _reactDom2.default.findDOMNode(spec.trackRef).childNodes[targetSlideIndex];
+	    }
+	    targetLeft = targetSlide ? targetSlide.offsetLeft * -1 : 0;
+	    if (spec.centerMode === true) {
+	      if (spec.infinite === false) {
+	        targetSlide = _reactDom2.default.findDOMNode(spec.trackRef).children[spec.slideIndex];
+	      } else {
+	        targetSlide = _reactDom2.default.findDOMNode(spec.trackRef).children[spec.slideIndex + spec.slidesToShow + 1];
+	      }
+	
+	      targetLeft = targetSlide ? targetSlide.offsetLeft * -1 : 0;
+	      targetLeft += (spec.listWidth - targetSlide.offsetWidth) / 2;
+	    }
+	  }
+	
+	  return targetLeft;
+	};
+
+/***/ },
+/* 278 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactDom = __webpack_require__(34);
+	
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+	
+	var _trackHelper = __webpack_require__(277);
+	
+	var _objectAssign = __webpack_require__(4);
+	
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var helpers = {
+	  initialize: function initialize(props) {
+	    var slickList = _reactDom2.default.findDOMNode(this.list);
+	
+	    var slideCount = _react2.default.Children.count(props.children);
+	    var listWidth = this.getWidth(slickList);
+	    var trackWidth = this.getWidth(_reactDom2.default.findDOMNode(this.track));
+	    var slideWidth;
+	
+	    if (!props.vertical) {
+	      var centerPaddingAdj = props.centerMode && parseInt(props.centerPadding) * 2;
+	      slideWidth = (this.getWidth(_reactDom2.default.findDOMNode(this)) - centerPaddingAdj) / props.slidesToShow;
+	    } else {
+	      slideWidth = this.getWidth(_reactDom2.default.findDOMNode(this));
+	    }
+	
+	    var slideHeight = this.getHeight(slickList.querySelector('[data-index="0"]'));
+	    var listHeight = slideHeight * props.slidesToShow;
+	
+	    var currentSlide = props.rtl ? slideCount - 1 - props.initialSlide : props.initialSlide;
+	
+	    this.setState({
+	      slideCount: slideCount,
+	      slideWidth: slideWidth,
+	      listWidth: listWidth,
+	      trackWidth: trackWidth,
+	      currentSlide: currentSlide,
+	      slideHeight: slideHeight,
+	      listHeight: listHeight
+	    }, function () {
+	
+	      var targetLeft = (0, _trackHelper.getTrackLeft)((0, _objectAssign2.default)({
+	        slideIndex: this.state.currentSlide,
+	        trackRef: this.track
+	      }, props, this.state));
+	      // getCSS function needs previously set state
+	      var trackStyle = (0, _trackHelper.getTrackCSS)((0, _objectAssign2.default)({ left: targetLeft }, props, this.state));
+	
+	      this.setState({ trackStyle: trackStyle });
+	
+	      this.autoPlay(); // once we're set up, trigger the initial autoplay.
+	    });
+	  },
+	  update: function update(props) {
+	    var slickList = _reactDom2.default.findDOMNode(this.list);
+	    // This method has mostly same code as initialize method.
+	    // Refactor it
+	    var slideCount = _react2.default.Children.count(props.children);
+	    var listWidth = this.getWidth(slickList);
+	    var trackWidth = this.getWidth(_reactDom2.default.findDOMNode(this.track));
+	    var slideWidth;
+	
+	    if (!props.vertical) {
+	      var centerPaddingAdj = props.centerMode && parseInt(props.centerPadding) * 2;
+	      slideWidth = (this.getWidth(_reactDom2.default.findDOMNode(this)) - centerPaddingAdj) / props.slidesToShow;
+	    } else {
+	      slideWidth = this.getWidth(_reactDom2.default.findDOMNode(this));
+	    }
+	
+	    var slideHeight = this.getHeight(slickList.querySelector('[data-index="0"]'));
+	    var listHeight = slideHeight * props.slidesToShow;
+	
+	    // pause slider if autoplay is set to false
+	    if (!props.autoplay) this.pause();
+	
+	    this.setState({
+	      slideCount: slideCount,
+	      slideWidth: slideWidth,
+	      listWidth: listWidth,
+	      trackWidth: trackWidth,
+	      slideHeight: slideHeight,
+	      listHeight: listHeight
+	    }, function () {
+	
+	      var targetLeft = (0, _trackHelper.getTrackLeft)((0, _objectAssign2.default)({
+	        slideIndex: this.state.currentSlide,
+	        trackRef: this.track
+	      }, props, this.state));
+	      // getCSS function needs previously set state
+	      var trackStyle = (0, _trackHelper.getTrackCSS)((0, _objectAssign2.default)({ left: targetLeft }, props, this.state));
+	
+	      this.setState({ trackStyle: trackStyle });
+	    });
+	  },
+	  getWidth: function getWidth(elem) {
+	    return elem.getBoundingClientRect().width || elem.offsetWidth;
+	  },
+	  getHeight: function getHeight(elem) {
+	    return elem.getBoundingClientRect().height || elem.offsetHeight;
+	  },
+	
+	  adaptHeight: function adaptHeight() {
+	    if (this.props.adaptiveHeight) {
+	      var selector = '[data-index="' + this.state.currentSlide + '"]';
+	      if (this.list) {
+	        var slickList = _reactDom2.default.findDOMNode(this.list);
+	        slickList.style.height = slickList.querySelector(selector).offsetHeight + 'px';
+	      }
+	    }
+	  },
+	  canGoNext: function canGoNext(opts) {
+	    var canGo = true;
+	    if (!opts.infinite) {
+	      if (opts.centerMode) {
+	        // check if current slide is last slide
+	        if (opts.currentSlide >= opts.slideCount - 1) {
+	          canGo = false;
+	        }
+	      } else {
+	        // check if all slides are shown in slider
+	        if (opts.slideCount <= opts.slidesToShow || opts.currentSlide >= opts.slideCount - opts.slidesToShow) {
+	          canGo = false;
+	        }
+	      }
+	    }
+	    return canGo;
+	  },
+	  slideHandler: function slideHandler(index) {
+	    var _this = this;
+	
+	    // Functionality of animateSlide and postSlide is merged into this function
+	    // console.log('slideHandler', index);
+	    var targetSlide, currentSlide;
+	    var targetLeft, currentLeft;
+	    var callback;
+	
+	    if (this.props.waitForAnimate && this.state.animating) {
+	      return;
+	    }
+	
+	    if (this.props.fade) {
+	      currentSlide = this.state.currentSlide;
+	
+	      // Don't change slide if it's not infite and current slide is the first or last slide.
+	      if (this.props.infinite === false && (index < 0 || index >= this.state.slideCount)) {
+	        return;
+	      }
+	
+	      //  Shifting targetSlide back into the range
+	      if (index < 0) {
+	        targetSlide = index + this.state.slideCount;
+	      } else if (index >= this.state.slideCount) {
+	        targetSlide = index - this.state.slideCount;
+	      } else {
+	        targetSlide = index;
+	      }
+	
+	      if (this.props.lazyLoad && this.state.lazyLoadedList.indexOf(targetSlide) < 0) {
+	        this.setState({
+	          lazyLoadedList: this.state.lazyLoadedList.concat(targetSlide)
+	        });
+	      }
+	
+	      callback = function callback() {
+	        _this.setState({
+	          animating: false
+	        });
+	        if (_this.props.afterChange) {
+	          _this.props.afterChange(targetSlide);
+	        }
+	        delete _this.animationEndCallback;
+	      };
+	
+	      this.setState({
+	        animating: true,
+	        currentSlide: targetSlide
+	      }, function () {
+	        this.animationEndCallback = setTimeout(callback, this.props.speed);
+	      });
+	
+	      if (this.props.beforeChange) {
+	        this.props.beforeChange(this.state.currentSlide, targetSlide);
+	      }
+	
+	      this.autoPlay();
+	      return;
+	    }
+	
+	    targetSlide = index;
+	    if (targetSlide < 0) {
+	      if (this.props.infinite === false) {
+	        currentSlide = 0;
+	      } else if (this.state.slideCount % this.props.slidesToScroll !== 0) {
+	        currentSlide = this.state.slideCount - this.state.slideCount % this.props.slidesToScroll;
+	      } else {
+	        currentSlide = this.state.slideCount + targetSlide;
+	      }
+	    } else if (targetSlide >= this.state.slideCount) {
+	      if (this.props.infinite === false) {
+	        currentSlide = this.state.slideCount - this.props.slidesToShow;
+	      } else if (this.state.slideCount % this.props.slidesToScroll !== 0) {
+	        currentSlide = 0;
+	      } else {
+	        currentSlide = targetSlide - this.state.slideCount;
+	      }
+	    } else {
+	      currentSlide = targetSlide;
+	    }
+	
+	    targetLeft = (0, _trackHelper.getTrackLeft)((0, _objectAssign2.default)({
+	      slideIndex: targetSlide,
+	      trackRef: this.track
+	    }, this.props, this.state));
+	
+	    currentLeft = (0, _trackHelper.getTrackLeft)((0, _objectAssign2.default)({
+	      slideIndex: currentSlide,
+	      trackRef: this.track
+	    }, this.props, this.state));
+	
+	    if (this.props.infinite === false) {
+	      targetLeft = currentLeft;
+	    }
+	
+	    if (this.props.beforeChange) {
+	      this.props.beforeChange(this.state.currentSlide, currentSlide);
+	    }
+	
+	    if (this.props.lazyLoad) {
+	      var loaded = true;
+	      var slidesToLoad = [];
+	      for (var i = targetSlide; i < targetSlide + this.props.slidesToShow; i++) {
+	        loaded = loaded && this.state.lazyLoadedList.indexOf(i) >= 0;
+	        if (!loaded) {
+	          slidesToLoad.push(i);
+	        }
+	      }
+	      if (!loaded) {
+	        this.setState({
+	          lazyLoadedList: this.state.lazyLoadedList.concat(slidesToLoad)
+	        });
+	      }
+	    }
+	
+	    // Slide Transition happens here.
+	    // animated transition happens to target Slide and
+	    // non - animated transition happens to current Slide
+	    // If CSS transitions are false, directly go the current slide.
+	
+	    if (this.props.useCSS === false) {
+	
+	      this.setState({
+	        currentSlide: currentSlide,
+	        trackStyle: (0, _trackHelper.getTrackCSS)((0, _objectAssign2.default)({ left: currentLeft }, this.props, this.state))
+	      }, function () {
+	        if (this.props.afterChange) {
+	          this.props.afterChange(currentSlide);
+	        }
+	      });
+	    } else {
+	
+	      var nextStateChanges = {
+	        animating: false,
+	        currentSlide: currentSlide,
+	        trackStyle: (0, _trackHelper.getTrackCSS)((0, _objectAssign2.default)({ left: currentLeft }, this.props, this.state)),
+	        swipeLeft: null
+	      };
+	
+	      callback = function callback() {
+	        _this.setState(nextStateChanges);
+	        if (_this.props.afterChange) {
+	          _this.props.afterChange(currentSlide);
+	        }
+	        delete _this.animationEndCallback;
+	      };
+	
+	      this.setState({
+	        animating: true,
+	        currentSlide: currentSlide,
+	        trackStyle: (0, _trackHelper.getTrackAnimateCSS)((0, _objectAssign2.default)({ left: targetLeft }, this.props, this.state))
+	      }, function () {
+	        this.animationEndCallback = setTimeout(callback, this.props.speed);
+	      });
+	    }
+	
+	    this.autoPlay();
+	  },
+	  swipeDirection: function swipeDirection(touchObject) {
+	    var xDist, yDist, r, swipeAngle;
+	
+	    xDist = touchObject.startX - touchObject.curX;
+	    yDist = touchObject.startY - touchObject.curY;
+	    r = Math.atan2(yDist, xDist);
+	
+	    swipeAngle = Math.round(r * 180 / Math.PI);
+	    if (swipeAngle < 0) {
+	      swipeAngle = 360 - Math.abs(swipeAngle);
+	    }
+	    if (swipeAngle <= 45 && swipeAngle >= 0 || swipeAngle <= 360 && swipeAngle >= 315) {
+	      return this.props.rtl === false ? 'left' : 'right';
+	    }
+	    if (swipeAngle >= 135 && swipeAngle <= 225) {
+	      return this.props.rtl === false ? 'right' : 'left';
+	    }
+	    if (this.props.verticalSwiping === true) {
+	      if (swipeAngle >= 35 && swipeAngle <= 135) {
+	        return 'down';
+	      } else {
+	        return 'up';
+	      }
+	    }
+	
+	    return 'vertical';
+	  },
+	  play: function play() {
+	    var nextIndex;
+	
+	    if (!this.state.mounted) {
+	      return false;
+	    }
+	
+	    if (this.props.rtl) {
+	      nextIndex = this.state.currentSlide - this.props.slidesToScroll;
+	    } else {
+	      if (this.canGoNext(_extends({}, this.props, this.state))) {
+	        nextIndex = this.state.currentSlide + this.props.slidesToScroll;
+	      } else {
+	        return false;
+	      }
+	    }
+	
+	    this.slideHandler(nextIndex);
+	  },
+	  autoPlay: function autoPlay() {
+	    if (this.state.autoPlayTimer) {
+	      return;
+	    }
+	    if (this.props.autoplay) {
+	      this.setState({
+	        autoPlayTimer: setInterval(this.play, this.props.autoplaySpeed)
+	      });
+	    }
+	  },
+	  pause: function pause() {
+	    if (this.state.autoPlayTimer) {
+	      clearInterval(this.state.autoPlayTimer);
+	      this.setState({
+	        autoPlayTimer: null
+	      });
+	    }
+	  }
+	};
+	
+	exports.default = helpers;
+
+/***/ },
+/* 279 */
 /***/ function(module, exports) {
 
-	/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {module.exports = __webpack_amd_options__;
+	"use strict";
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, {}))
+	var initialState = {
+	    animating: false,
+	    dragging: false,
+	    autoPlayTimer: null,
+	    currentDirection: 0,
+	    currentLeft: null,
+	    currentSlide: 0,
+	    direction: 1,
+	    listWidth: null,
+	    listHeight: null,
+	    // loadIndex: 0,
+	    slideCount: null,
+	    slideWidth: null,
+	    slideHeight: null,
+	    // sliding: false,
+	    // slideOffset: 0,
+	    swipeLeft: null,
+	    touchObject: {
+	        startX: 0,
+	        startY: 0,
+	        curX: 0,
+	        curY: 0
+	    },
+	
+	    lazyLoadedList: [],
+	
+	    // added for react
+	    initialized: false,
+	    edgeDragged: false,
+	    swiped: false, // used by swipeEvent. differentites between touch and swipe.
+	    trackStyle: {},
+	    trackWidth: 0
+	
+	    // Removed
+	    // transformsEnabled: false,
+	    // $nextArrow: null,
+	    // $prevArrow: null,
+	    // $dots: null,
+	    // $list: null,
+	    // $slideTrack: null,
+	    // $slides: null,
+	};
+	
+	module.exports = initialState;
+
+/***/ },
+/* 280 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var defaultProps = {
+	    className: '',
+	    accessibility: true,
+	    adaptiveHeight: false,
+	    arrows: true,
+	    autoplay: false,
+	    autoplaySpeed: 3000,
+	    centerMode: false,
+	    centerPadding: '50px',
+	    cssEase: 'ease',
+	    customPaging: function customPaging(i) {
+	        return _react2.default.createElement(
+	            'button',
+	            null,
+	            i + 1
+	        );
+	    },
+	    dots: false,
+	    dotsClass: 'slick-dots',
+	    draggable: true,
+	    easing: 'linear',
+	    edgeFriction: 0.35,
+	    fade: false,
+	    focusOnSelect: false,
+	    infinite: true,
+	    initialSlide: 0,
+	    lazyLoad: false,
+	    pauseOnHover: true,
+	    responsive: null,
+	    rtl: false,
+	    slide: 'div',
+	    slidesToShow: 1,
+	    slidesToScroll: 1,
+	    speed: 500,
+	    swipe: true,
+	    swipeToSlide: false,
+	    touchMove: true,
+	    touchThreshold: 5,
+	    useCSS: true,
+	    variableWidth: false,
+	    vertical: false,
+	    waitForAnimate: true,
+	    afterChange: null,
+	    beforeChange: null,
+	    edgeEvent: null,
+	    init: null,
+	    swipeEvent: null,
+	    // nextArrow, prevArrow are react componets
+	    nextArrow: null,
+	    prevArrow: null
+	};
+	
+	module.exports = defaultProps;
+
+/***/ },
+/* 281 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+	
+	(function () {
+		'use strict';
+	
+		var hasOwn = {}.hasOwnProperty;
+	
+		function classNames () {
+			var classes = [];
+	
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+	
+				var argType = typeof arg;
+	
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+	
+			return classes.join(' ');
+		}
+	
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
+
+/***/ },
+/* 282 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	exports.Track = undefined;
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _objectAssign = __webpack_require__(4);
+	
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+	
+	var _classnames = __webpack_require__(281);
+	
+	var _classnames2 = _interopRequireDefault(_classnames);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var getSlideClasses = function getSlideClasses(spec) {
+	  var slickActive, slickCenter, slickCloned;
+	  var centerOffset, index;
+	
+	  if (spec.rtl) {
+	    index = spec.slideCount - 1 - spec.index;
+	  } else {
+	    index = spec.index;
+	  }
+	
+	  slickCloned = index < 0 || index >= spec.slideCount;
+	  if (spec.centerMode) {
+	    centerOffset = Math.floor(spec.slidesToShow / 2);
+	    slickCenter = (index - spec.currentSlide) % spec.slideCount === 0;
+	    if (index > spec.currentSlide - centerOffset - 1 && index <= spec.currentSlide + centerOffset) {
+	      slickActive = true;
+	    }
+	  } else {
+	    slickActive = spec.currentSlide <= index && index < spec.currentSlide + spec.slidesToShow;
+	  }
+	  return (0, _classnames2.default)({
+	    'slick-slide': true,
+	    'slick-active': slickActive,
+	    'slick-center': slickCenter,
+	    'slick-cloned': slickCloned
+	  });
+	};
+	
+	var getSlideStyle = function getSlideStyle(spec) {
+	  var style = {};
+	
+	  if (spec.variableWidth === undefined || spec.variableWidth === false) {
+	    style.width = spec.slideWidth;
+	  }
+	
+	  if (spec.fade) {
+	    style.position = 'relative';
+	    style.left = -spec.index * spec.slideWidth;
+	    style.opacity = spec.currentSlide === spec.index ? 1 : 0;
+	    style.transition = 'opacity ' + spec.speed + 'ms ' + spec.cssEase;
+	    style.WebkitTransition = 'opacity ' + spec.speed + 'ms ' + spec.cssEase;
+	  }
+	
+	  return style;
+	};
+	
+	var getKey = function getKey(child, fallbackKey) {
+	  // key could be a zero
+	  return child.key === null || child.key === undefined ? fallbackKey : child.key;
+	};
+	
+	var renderSlides = function renderSlides(spec) {
+	  var key;
+	  var slides = [];
+	  var preCloneSlides = [];
+	  var postCloneSlides = [];
+	  var count = _react2.default.Children.count(spec.children);
+	
+	  _react2.default.Children.forEach(spec.children, function (elem, index) {
+	    var child = void 0;
+	    var childOnClickOptions = {
+	      message: 'children',
+	      index: index,
+	      slidesToScroll: spec.slidesToScroll,
+	      currentSlide: spec.currentSlide
+	    };
+	
+	    if (!spec.lazyLoad | (spec.lazyLoad && spec.lazyLoadedList.indexOf(index) >= 0)) {
+	      child = elem;
+	    } else {
+	      child = _react2.default.createElement('div', null);
+	    }
+	    var childStyle = getSlideStyle((0, _objectAssign2.default)({}, spec, { index: index }));
+	    var slickClasses = getSlideClasses((0, _objectAssign2.default)({ index: index }, spec));
+	    var cssClasses;
+	
+	    if (child.props.className) {
+	      cssClasses = (0, _classnames2.default)(slickClasses, child.props.className);
+	    } else {
+	      cssClasses = slickClasses;
+	    }
+	
+	    var onClick = function onClick(e) {
+	      child.props && child.props.onClick && child.props.onClick(e);
+	      if (spec.focusOnSelect) {
+	        spec.focusOnSelect(childOnClickOptions);
+	      }
+	    };
+	
+	    slides.push(_react2.default.cloneElement(child, {
+	      key: 'original' + getKey(child, index),
+	      'data-index': index,
+	      className: cssClasses,
+	      tabIndex: '-1',
+	      style: (0, _objectAssign2.default)({ outline: 'none' }, child.props.style || {}, childStyle),
+	      onClick: onClick
+	    }));
+	
+	    // variableWidth doesn't wrap properly.
+	    if (spec.infinite && spec.fade === false) {
+	      var infiniteCount = spec.variableWidth ? spec.slidesToShow + 1 : spec.slidesToShow;
+	
+	      if (index >= count - infiniteCount) {
+	        key = -(count - index);
+	        preCloneSlides.push(_react2.default.cloneElement(child, {
+	          key: 'precloned' + getKey(child, key),
+	          'data-index': key,
+	          className: cssClasses,
+	          style: (0, _objectAssign2.default)({}, child.props.style || {}, childStyle),
+	          onClick: onClick
+	        }));
+	      }
+	
+	      if (index < infiniteCount) {
+	        key = count + index;
+	        postCloneSlides.push(_react2.default.cloneElement(child, {
+	          key: 'postcloned' + getKey(child, key),
+	          'data-index': key,
+	          className: cssClasses,
+	          style: (0, _objectAssign2.default)({}, child.props.style || {}, childStyle),
+	          onClick: onClick
+	        }));
+	      }
+	    }
+	  });
+	
+	  if (spec.rtl) {
+	    return preCloneSlides.concat(slides, postCloneSlides).reverse();
+	  } else {
+	    return preCloneSlides.concat(slides, postCloneSlides);
+	  }
+	};
+	
+	var Track = exports.Track = _react2.default.createClass({
+	  displayName: 'Track',
+	
+	  render: function render() {
+	    var slides = renderSlides.call(this, this.props);
+	    return _react2.default.createElement(
+	      'div',
+	      { className: 'slick-track', style: this.props.trackStyle },
+	      slides
+	    );
+	  }
+	});
+
+/***/ },
+/* 283 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	exports.Dots = undefined;
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _classnames = __webpack_require__(281);
+	
+	var _classnames2 = _interopRequireDefault(_classnames);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var getDotCount = function getDotCount(spec) {
+	  var dots;
+	  dots = Math.ceil(spec.slideCount / spec.slidesToScroll);
+	  return dots;
+	};
+	
+	var Dots = exports.Dots = _react2.default.createClass({
+	  displayName: 'Dots',
+	
+	
+	  clickHandler: function clickHandler(options, e) {
+	    // In Autoplay the focus stays on clicked button even after transition
+	    // to next slide. That only goes away by click somewhere outside
+	    e.preventDefault();
+	    this.props.clickHandler(options);
+	  },
+	  render: function render() {
+	    var _this = this;
+	
+	    var dotCount = getDotCount({
+	      slideCount: this.props.slideCount,
+	      slidesToScroll: this.props.slidesToScroll
+	    });
+	
+	    // Apply join & split to Array to pre-fill it for IE8
+	    //
+	    // Credit: http://stackoverflow.com/a/13735425/1849458
+	    var dots = Array.apply(null, Array(dotCount + 1).join('0').split('')).map(function (x, i) {
+	
+	      var leftBound = i * _this.props.slidesToScroll;
+	      var rightBound = i * _this.props.slidesToScroll + (_this.props.slidesToScroll - 1);
+	      var className = (0, _classnames2.default)({
+	        'slick-active': _this.props.currentSlide >= leftBound && _this.props.currentSlide <= rightBound
+	      });
+	
+	      var dotOptions = {
+	        message: 'dots',
+	        index: i,
+	        slidesToScroll: _this.props.slidesToScroll,
+	        currentSlide: _this.props.currentSlide
+	      };
+	
+	      var onClick = _this.clickHandler.bind(_this, dotOptions);
+	
+	      return _react2.default.createElement(
+	        'li',
+	        { key: i, className: className },
+	        _react2.default.cloneElement(_this.props.customPaging(i), { onClick: onClick })
+	      );
+	    });
+	
+	    return _react2.default.createElement(
+	      'ul',
+	      { className: this.props.dotsClass, style: { display: 'block' } },
+	      dots
+	    );
+	  }
+	});
+
+/***/ },
+/* 284 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	exports.NextArrow = exports.PrevArrow = undefined;
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _classnames = __webpack_require__(281);
+	
+	var _classnames2 = _interopRequireDefault(_classnames);
+	
+	var _helpers = __webpack_require__(278);
+	
+	var _helpers2 = _interopRequireDefault(_helpers);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var PrevArrow = exports.PrevArrow = _react2.default.createClass({
+	  displayName: 'PrevArrow',
+	
+	
+	  clickHandler: function clickHandler(options, e) {
+	    if (e) {
+	      e.preventDefault();
+	    }
+	    this.props.clickHandler(options, e);
+	  },
+	  render: function render() {
+	    var prevClasses = { 'slick-arrow': true, 'slick-prev': true };
+	    var prevHandler = this.clickHandler.bind(this, { message: 'previous' });
+	
+	    if (!this.props.infinite && (this.props.currentSlide === 0 || this.props.slideCount <= this.props.slidesToShow)) {
+	      prevClasses['slick-disabled'] = true;
+	      prevHandler = null;
+	    }
+	
+	    var prevArrowProps = {
+	      key: '0',
+	      'data-role': 'none',
+	      className: (0, _classnames2.default)(prevClasses),
+	      style: { display: 'block' },
+	      onClick: prevHandler
+	    };
+	    var prevArrow;
+	
+	    if (this.props.prevArrow) {
+	      prevArrow = _react2.default.cloneElement(this.props.prevArrow, prevArrowProps);
+	    } else {
+	      prevArrow = _react2.default.createElement(
+	        'button',
+	        _extends({ key: '0', type: 'button' }, prevArrowProps),
+	        ' Previous'
+	      );
+	    }
+	
+	    return prevArrow;
+	  }
+	});
+	
+	var NextArrow = exports.NextArrow = _react2.default.createClass({
+	  displayName: 'NextArrow',
+	
+	  clickHandler: function clickHandler(options, e) {
+	    if (e) {
+	      e.preventDefault();
+	    }
+	    this.props.clickHandler(options, e);
+	  },
+	  render: function render() {
+	    var nextClasses = { 'slick-arrow': true, 'slick-next': true };
+	    var nextHandler = this.clickHandler.bind(this, { message: 'next' });
+	
+	    if (!_helpers2.default.canGoNext(this.props)) {
+	      nextClasses['slick-disabled'] = true;
+	      nextHandler = null;
+	    }
+	
+	    var nextArrowProps = {
+	      key: '1',
+	      'data-role': 'none',
+	      className: (0, _classnames2.default)(nextClasses),
+	      style: { display: 'block' },
+	      onClick: nextHandler
+	    };
+	
+	    var nextArrow;
+	
+	    if (this.props.nextArrow) {
+	      nextArrow = _react2.default.cloneElement(this.props.nextArrow, nextArrowProps);
+	    } else {
+	      nextArrow = _react2.default.createElement(
+	        'button',
+	        _extends({ key: '1', type: 'button' }, nextArrowProps),
+	        ' Next'
+	      );
+	    }
+	
+	    return nextArrow;
+	  }
+	});
+
+/***/ },
+/* 285 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var camel2hyphen = __webpack_require__(286);
+	
+	var isDimension = function (feature) {
+	  var re = /[height|width]$/;
+	  return re.test(feature);
+	};
+	
+	var obj2mq = function (obj) {
+	  var mq = '';
+	  var features = Object.keys(obj);
+	  features.forEach(function (feature, index) {
+	    var value = obj[feature];
+	    feature = camel2hyphen(feature);
+	    // Add px to dimension features
+	    if (isDimension(feature) && typeof value === 'number') {
+	      value = value + 'px';
+	    }
+	    if (value === true) {
+	      mq += feature;
+	    } else if (value === false) {
+	      mq += 'not ' + feature;
+	    } else {
+	      mq += '(' + feature + ': ' + value + ')';
+	    }
+	    if (index < features.length-1) {
+	      mq += ' and '
+	    }
+	  });
+	  return mq;
+	};
+	
+	var json2mq = function (query) {
+	  var mq = '';
+	  if (typeof query === 'string') {
+	    return query;
+	  }
+	  // Handling array of media queries
+	  if (query instanceof Array) {
+	    query.forEach(function (q, index) {
+	      mq += obj2mq(q);
+	      if (index < query.length-1) {
+	        mq += ', '
+	      }
+	    });
+	    return mq;
+	  }
+	  // Handling single media query
+	  return obj2mq(query);
+	};
+	
+	module.exports = json2mq;
+
+/***/ },
+/* 286 */
+/***/ function(module, exports) {
+
+	var camel2hyphen = function (str) {
+	  return str
+	          .replace(/[A-Z]/g, function (match) {
+	            return '-' + match.toLowerCase();
+	          })
+	          .toLowerCase();
+	};
+	
+	module.exports = camel2hyphen;
+
+/***/ },
+/* 287 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var canUseDOM = __webpack_require__(288);
+	var enquire = canUseDOM && __webpack_require__(289);
+	var json2mq = __webpack_require__(285);
+	
+	var ResponsiveMixin = {
+	  media: function (query, handler) {
+	    query = json2mq(query);
+	    if (typeof handler === 'function') {
+	      handler = {
+	        match: handler
+	      };
+	    }
+	    canUseDOM && enquire.register(query, handler);
+	
+	    // Queue the handlers to unregister them at unmount  
+	    if (! this._responsiveMediaHandlers) {
+	      this._responsiveMediaHandlers = [];
+	    }
+	    this._responsiveMediaHandlers.push({query: query, handler: handler});
+	  },
+	  componentWillUnmount: function () {
+	    if (this._responsiveMediaHandlers) {
+	      this._responsiveMediaHandlers.forEach(function(obj) {
+	        canUseDOM && enquire.unregister(obj.query, obj.handler);
+	      });
+	    }
+	  }
+	};
+	
+	module.exports = ResponsiveMixin;
+
+
+/***/ },
+/* 288 */
+/***/ function(module, exports) {
+
+	var canUseDOM = !!(
+	  typeof window !== 'undefined' &&
+	  window.document &&
+	  window.document.createElement
+	);
+	
+	module.exports = canUseDOM;
+
+/***/ },
+/* 289 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	 * enquire.js v2.1.1 - Awesome Media Queries in JavaScript
+	 * Copyright (c) 2014 Nick Williams - http://wicky.nillia.ms/enquire.js
+	 * License: MIT (http://www.opensource.org/licenses/mit-license.php)
+	 */
+	
+	;(function (name, context, factory) {
+		var matchMedia = window.matchMedia;
+	
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = factory(matchMedia);
+		}
+		else if (true) {
+			!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
+				return (context[name] = factory(matchMedia));
+			}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		}
+		else {
+			context[name] = factory(matchMedia);
+		}
+	}('enquire', this, function (matchMedia) {
+	
+		'use strict';
+	
+	    /*jshint unused:false */
+	    /**
+	     * Helper function for iterating over a collection
+	     *
+	     * @param collection
+	     * @param fn
+	     */
+	    function each(collection, fn) {
+	        var i      = 0,
+	            length = collection.length,
+	            cont;
+	
+	        for(i; i < length; i++) {
+	            cont = fn(collection[i], i);
+	            if(cont === false) {
+	                break; //allow early exit
+	            }
+	        }
+	    }
+	
+	    /**
+	     * Helper function for determining whether target object is an array
+	     *
+	     * @param target the object under test
+	     * @return {Boolean} true if array, false otherwise
+	     */
+	    function isArray(target) {
+	        return Object.prototype.toString.apply(target) === '[object Array]';
+	    }
+	
+	    /**
+	     * Helper function for determining whether target object is a function
+	     *
+	     * @param target the object under test
+	     * @return {Boolean} true if function, false otherwise
+	     */
+	    function isFunction(target) {
+	        return typeof target === 'function';
+	    }
+	
+	    /**
+	     * Delegate to handle a media query being matched and unmatched.
+	     *
+	     * @param {object} options
+	     * @param {function} options.match callback for when the media query is matched
+	     * @param {function} [options.unmatch] callback for when the media query is unmatched
+	     * @param {function} [options.setup] one-time callback triggered the first time a query is matched
+	     * @param {boolean} [options.deferSetup=false] should the setup callback be run immediately, rather than first time query is matched?
+	     * @constructor
+	     */
+	    function QueryHandler(options) {
+	        this.options = options;
+	        !options.deferSetup && this.setup();
+	    }
+	    QueryHandler.prototype = {
+	
+	        /**
+	         * coordinates setup of the handler
+	         *
+	         * @function
+	         */
+	        setup : function() {
+	            if(this.options.setup) {
+	                this.options.setup();
+	            }
+	            this.initialised = true;
+	        },
+	
+	        /**
+	         * coordinates setup and triggering of the handler
+	         *
+	         * @function
+	         */
+	        on : function() {
+	            !this.initialised && this.setup();
+	            this.options.match && this.options.match();
+	        },
+	
+	        /**
+	         * coordinates the unmatch event for the handler
+	         *
+	         * @function
+	         */
+	        off : function() {
+	            this.options.unmatch && this.options.unmatch();
+	        },
+	
+	        /**
+	         * called when a handler is to be destroyed.
+	         * delegates to the destroy or unmatch callbacks, depending on availability.
+	         *
+	         * @function
+	         */
+	        destroy : function() {
+	            this.options.destroy ? this.options.destroy() : this.off();
+	        },
+	
+	        /**
+	         * determines equality by reference.
+	         * if object is supplied compare options, if function, compare match callback
+	         *
+	         * @function
+	         * @param {object || function} [target] the target for comparison
+	         */
+	        equals : function(target) {
+	            return this.options === target || this.options.match === target;
+	        }
+	
+	    };
+	    /**
+	     * Represents a single media query, manages it's state and registered handlers for this query
+	     *
+	     * @constructor
+	     * @param {string} query the media query string
+	     * @param {boolean} [isUnconditional=false] whether the media query should run regardless of whether the conditions are met. Primarily for helping older browsers deal with mobile-first design
+	     */
+	    function MediaQuery(query, isUnconditional) {
+	        this.query = query;
+	        this.isUnconditional = isUnconditional;
+	        this.handlers = [];
+	        this.mql = matchMedia(query);
+	
+	        var self = this;
+	        this.listener = function(mql) {
+	            self.mql = mql;
+	            self.assess();
+	        };
+	        this.mql.addListener(this.listener);
+	    }
+	    MediaQuery.prototype = {
+	
+	        /**
+	         * add a handler for this query, triggering if already active
+	         *
+	         * @param {object} handler
+	         * @param {function} handler.match callback for when query is activated
+	         * @param {function} [handler.unmatch] callback for when query is deactivated
+	         * @param {function} [handler.setup] callback for immediate execution when a query handler is registered
+	         * @param {boolean} [handler.deferSetup=false] should the setup callback be deferred until the first time the handler is matched?
+	         */
+	        addHandler : function(handler) {
+	            var qh = new QueryHandler(handler);
+	            this.handlers.push(qh);
+	
+	            this.matches() && qh.on();
+	        },
+	
+	        /**
+	         * removes the given handler from the collection, and calls it's destroy methods
+	         * 
+	         * @param {object || function} handler the handler to remove
+	         */
+	        removeHandler : function(handler) {
+	            var handlers = this.handlers;
+	            each(handlers, function(h, i) {
+	                if(h.equals(handler)) {
+	                    h.destroy();
+	                    return !handlers.splice(i,1); //remove from array and exit each early
+	                }
+	            });
+	        },
+	
+	        /**
+	         * Determine whether the media query should be considered a match
+	         * 
+	         * @return {Boolean} true if media query can be considered a match, false otherwise
+	         */
+	        matches : function() {
+	            return this.mql.matches || this.isUnconditional;
+	        },
+	
+	        /**
+	         * Clears all handlers and unbinds events
+	         */
+	        clear : function() {
+	            each(this.handlers, function(handler) {
+	                handler.destroy();
+	            });
+	            this.mql.removeListener(this.listener);
+	            this.handlers.length = 0; //clear array
+	        },
+	
+	        /*
+	         * Assesses the query, turning on all handlers if it matches, turning them off if it doesn't match
+	         */
+	        assess : function() {
+	            var action = this.matches() ? 'on' : 'off';
+	
+	            each(this.handlers, function(handler) {
+	                handler[action]();
+	            });
+	        }
+	    };
+	    /**
+	     * Allows for registration of query handlers.
+	     * Manages the query handler's state and is responsible for wiring up browser events
+	     *
+	     * @constructor
+	     */
+	    function MediaQueryDispatch () {
+	        if(!matchMedia) {
+	            throw new Error('matchMedia not present, legacy browsers require a polyfill');
+	        }
+	
+	        this.queries = {};
+	        this.browserIsIncapable = !matchMedia('only all').matches;
+	    }
+	
+	    MediaQueryDispatch.prototype = {
+	
+	        /**
+	         * Registers a handler for the given media query
+	         *
+	         * @param {string} q the media query
+	         * @param {object || Array || Function} options either a single query handler object, a function, or an array of query handlers
+	         * @param {function} options.match fired when query matched
+	         * @param {function} [options.unmatch] fired when a query is no longer matched
+	         * @param {function} [options.setup] fired when handler first triggered
+	         * @param {boolean} [options.deferSetup=false] whether setup should be run immediately or deferred until query is first matched
+	         * @param {boolean} [shouldDegrade=false] whether this particular media query should always run on incapable browsers
+	         */
+	        register : function(q, options, shouldDegrade) {
+	            var queries         = this.queries,
+	                isUnconditional = shouldDegrade && this.browserIsIncapable;
+	
+	            if(!queries[q]) {
+	                queries[q] = new MediaQuery(q, isUnconditional);
+	            }
+	
+	            //normalise to object in an array
+	            if(isFunction(options)) {
+	                options = { match : options };
+	            }
+	            if(!isArray(options)) {
+	                options = [options];
+	            }
+	            each(options, function(handler) {
+	                queries[q].addHandler(handler);
+	            });
+	
+	            return this;
+	        },
+	
+	        /**
+	         * unregisters a query and all it's handlers, or a specific handler for a query
+	         *
+	         * @param {string} q the media query to target
+	         * @param {object || function} [handler] specific handler to unregister
+	         */
+	        unregister : function(q, handler) {
+	            var query = this.queries[q];
+	
+	            if(query) {
+	                if(handler) {
+	                    query.removeHandler(handler);
+	                }
+	                else {
+	                    query.clear();
+	                    delete this.queries[q];
+	                }
+	            }
+	
+	            return this;
+	        }
+	    };
+	
+		return new MediaQueryDispatch();
+	
+	}));
+
+/***/ },
+/* 290 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __assign = (this && this.__assign) || Object.assign || function(t) {
+	    for (var s, i = 1, n = arguments.length; i < n; i++) {
+	        s = arguments[i];
+	        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+	            t[p] = s[p];
+	    }
+	    return t;
+	};
+	const React = __webpack_require__(1);
+	const Slider = __webpack_require__(273);
+	const Modal = __webpack_require__(292);
+	class ImageCSVSlider extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        this.openModal.bind(this);
+	        this.closeModal.bind(this);
+	    }
+	    openModal(index) {
+	        this.setState({ openindex: index });
+	    }
+	    closeModal() {
+	        this.setState({ openindex: null });
+	    }
+	    render() {
+	        if (!this.props.csvimages)
+	            return null;
+	        var wrapperstyle = {
+	            width: "200px",
+	            border: "1px solid #ccc",
+	            padding: "20px 20px 40px 20px",
+	            margin: "20px"
+	        };
+	        var itemstyle = {
+	            cursor: "pointer"
+	        };
+	        var settings = {
+	            dots: true,
+	            infinite: true,
+	            speed: 500,
+	            slidesToShow: 1,
+	            slidesToScroll: 1,
+	            autoplay: true,
+	            pauseOnHover: true,
+	        };
+	        var modalstyle = {
+	            overlay: {
+	                position: 'fixed',
+	                top: 0,
+	                left: 0,
+	                right: 0,
+	                bottom: 0,
+	                backgroundColor: 'rgba(53, 53, 53, 0.75)'
+	            },
+	            content: {
+	                top: '50%',
+	                left: '50%',
+	                right: 'auto',
+	                bottom: 'auto',
+	                transform: 'translate(-50%, -50%)'
+	            }
+	        };
+	        var self = this;
+	        return (React.createElement("div", {style: wrapperstyle}, 
+	            React.createElement(Slider, __assign({}, settings), this.props.csvimages.split(",").map(function (img, index) {
+	                var isopen = self.state ? self.state.openindex == index : false;
+	                return (React.createElement("div", {onClick: () => self.openModal(index), style: itemstyle, key: index}, 
+	                    React.createElement("img", {src: img, height: "150"}), 
+	                    React.createElement(Modal, {style: modalstyle, isOpen: isopen, onRequestClose: self.closeModal.bind(self)}, 
+	                        React.createElement("img", {src: img})
+	                    )));
+	            }))
+	        ));
+	    }
+	}
+	exports.ImageCSVSlider = ImageCSVSlider;
+
+
+/***/ },
+/* 291 */,
+/* 292 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(293);
+	
+
+
+/***/ },
+/* 293 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(34);
+	var ExecutionEnvironment = __webpack_require__(294);
+	var ModalPortal = React.createFactory(__webpack_require__(295));
+	var ariaAppHider = __webpack_require__(310);
+	var elementClass = __webpack_require__(311);
+	var renderSubtreeIntoContainer = __webpack_require__(34).unstable_renderSubtreeIntoContainer;
+	var Assign = __webpack_require__(299);
+	
+	var SafeHTMLElement = ExecutionEnvironment.canUseDOM ? window.HTMLElement : {};
+	var AppElement = ExecutionEnvironment.canUseDOM ? document.body : {appendChild: function() {}};
+	
+	var Modal = React.createClass({
+	
+	  displayName: 'Modal',
+	  statics: {
+	    setAppElement: function(element) {
+	        AppElement = ariaAppHider.setElement(element);
+	    },
+	    injectCSS: function() {
+	      "production" !== process.env.NODE_ENV
+	        && console.warn('React-Modal: injectCSS has been deprecated ' +
+	                        'and no longer has any effect. It will be removed in a later version');
+	    }
+	  },
+	
+	  propTypes: {
+	    isOpen: React.PropTypes.bool.isRequired,
+	    style: React.PropTypes.shape({
+	      content: React.PropTypes.object,
+	      overlay: React.PropTypes.object
+	    }),
+	    portalClassName: React.PropTypes.string,
+	    appElement: React.PropTypes.instanceOf(SafeHTMLElement),
+	    onAfterOpen: React.PropTypes.func,
+	    onRequestClose: React.PropTypes.func,
+	    closeTimeoutMS: React.PropTypes.number,
+	    ariaHideApp: React.PropTypes.bool,
+	    shouldCloseOnOverlayClick: React.PropTypes.bool,
+	    role: React.PropTypes.string
+	  },
+	
+	  getDefaultProps: function () {
+	    return {
+	      isOpen: false,
+	      portalClassName: 'ReactModalPortal',
+	      ariaHideApp: true,
+	      closeTimeoutMS: 0,
+	      shouldCloseOnOverlayClick: true
+	    };
+	  },
+	
+	  componentDidMount: function() {
+	    this.node = document.createElement('div');
+	    this.node.className = this.props.portalClassName;
+	    document.body.appendChild(this.node);
+	    this.renderPortal(this.props);
+	  },
+	
+	  componentWillReceiveProps: function(newProps) {
+	    this.renderPortal(newProps);
+	  },
+	
+	  componentWillUnmount: function() {
+	    ReactDOM.unmountComponentAtNode(this.node);
+	    document.body.removeChild(this.node);
+	    elementClass(document.body).remove('ReactModal__Body--open');
+	  },
+	
+	  renderPortal: function(props) {
+	    if (props.isOpen) {
+	      elementClass(document.body).add('ReactModal__Body--open');
+	    } else {
+	      elementClass(document.body).remove('ReactModal__Body--open');
+	    }
+	
+	    if (props.ariaHideApp) {
+	      ariaAppHider.toggle(props.isOpen, props.appElement);
+	    }
+	
+	    this.portal = renderSubtreeIntoContainer(this, ModalPortal(Assign({}, props, {defaultStyles: Modal.defaultStyles})), this.node);
+	  },
+	
+	  render: function () {
+	    return React.DOM.noscript();
+	  }
+	});
+	
+	Modal.defaultStyles = {
+	  overlay: {
+	    position        : 'fixed',
+	    top             : 0,
+	    left            : 0,
+	    right           : 0,
+	    bottom          : 0,
+	    backgroundColor : 'rgba(255, 255, 255, 0.75)'
+	  },
+	  content: {
+	    position                : 'absolute',
+	    top                     : '40px',
+	    left                    : '40px',
+	    right                   : '40px',
+	    bottom                  : '40px',
+	    border                  : '1px solid #ccc',
+	    background              : '#fff',
+	    overflow                : 'auto',
+	    WebkitOverflowScrolling : 'touch',
+	    borderRadius            : '4px',
+	    outline                 : 'none',
+	    padding                 : '20px'
+	  }
+	}
+	
+	module.exports = Modal
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 294 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2015 Jed Watson.
+	  Based on code that is Copyright 2013-2015, Facebook, Inc.
+	  All rights reserved.
+	*/
+	
+	(function () {
+		'use strict';
+	
+		var canUseDOM = !!(
+			typeof window !== 'undefined' &&
+			window.document &&
+			window.document.createElement
+		);
+	
+		var ExecutionEnvironment = {
+	
+			canUseDOM: canUseDOM,
+	
+			canUseWorkers: typeof Worker !== 'undefined',
+	
+			canUseEventListeners:
+				canUseDOM && !!(window.addEventListener || window.attachEvent),
+	
+			canUseViewport: canUseDOM && !!window.screen
+	
+		};
+	
+		if (true) {
+			!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return ExecutionEnvironment;
+			}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else if (typeof module !== 'undefined' && module.exports) {
+			module.exports = ExecutionEnvironment;
+		} else {
+			window.ExecutionEnvironment = ExecutionEnvironment;
+		}
+	
+	}());
+
+
+/***/ },
+/* 295 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var div = React.DOM.div;
+	var focusManager = __webpack_require__(296);
+	var scopeTab = __webpack_require__(298);
+	var Assign = __webpack_require__(299);
+	
+	// so that our CSS is statically analyzable
+	var CLASS_NAMES = {
+	  overlay: {
+	    base: 'ReactModal__Overlay',
+	    afterOpen: 'ReactModal__Overlay--after-open',
+	    beforeClose: 'ReactModal__Overlay--before-close'
+	  },
+	  content: {
+	    base: 'ReactModal__Content',
+	    afterOpen: 'ReactModal__Content--after-open',
+	    beforeClose: 'ReactModal__Content--before-close'
+	  }
+	};
+	
+	var ModalPortal = module.exports = React.createClass({
+	
+	  displayName: 'ModalPortal',
+	  shouldClose: null,
+	
+	  getDefaultProps: function() {
+	    return {
+	      style: {
+	        overlay: {},
+	        content: {}
+	      }
+	    };
+	  },
+	
+	  getInitialState: function() {
+	    return {
+	      afterOpen: false,
+	      beforeClose: false
+	    };
+	  },
+	
+	  componentDidMount: function() {
+	    // Focus needs to be set when mounting and already open
+	    if (this.props.isOpen) {
+	      this.setFocusAfterRender(true);
+	      this.open();
+	    }
+	  },
+	
+	  componentWillUnmount: function() {
+	    clearTimeout(this.closeTimer);
+	  },
+	
+	  componentWillReceiveProps: function(newProps) {
+	    // Focus only needs to be set once when the modal is being opened
+	    if (!this.props.isOpen && newProps.isOpen) {
+	      this.setFocusAfterRender(true);
+	      this.open();
+	    } else if (this.props.isOpen && !newProps.isOpen) {
+	      this.close();
+	    }
+	  },
+	
+	  componentDidUpdate: function () {
+	    if (this.focusAfterRender) {
+	      this.focusContent();
+	      this.setFocusAfterRender(false);
+	    }
+	  },
+	
+	  setFocusAfterRender: function (focus) {
+	    this.focusAfterRender = focus;
+	  },
+	
+	  open: function() {
+	    if (this.state.afterOpen && this.state.beforeClose) {
+	      clearTimeout(this.closeTimer);
+	      this.setState({ beforeClose: false });
+	    } else {
+	      focusManager.setupScopedFocus(this.node);
+	      focusManager.markForFocusLater();
+	      this.setState({isOpen: true}, function() {
+	        this.setState({afterOpen: true});
+	
+	        if (this.props.isOpen && this.props.onAfterOpen) {
+	          this.props.onAfterOpen();
+	        }
+	      }.bind(this));
+	    }
+	  },
+	
+	  close: function() {
+	    if (!this.ownerHandlesClose())
+	      return;
+	    if (this.props.closeTimeoutMS > 0)
+	      this.closeWithTimeout();
+	    else
+	      this.closeWithoutTimeout();
+	  },
+	
+	  focusContent: function() {
+	    // Don't steal focus from inner elements
+	    if (!this.contentHasFocus()) {
+	      this.refs.content.focus();
+	    }
+	  },
+	
+	  closeWithTimeout: function() {
+	    this.setState({beforeClose: true}, function() {
+	      this.closeTimer = setTimeout(this.closeWithoutTimeout, this.props.closeTimeoutMS);
+	    }.bind(this));
+	  },
+	
+	  closeWithoutTimeout: function() {
+	    this.setState({
+	      beforeClose: false,
+	      isOpen: false,
+	      afterOpen: false,
+	    }, this.afterClose);
+	  },
+	
+	  afterClose: function() {
+	    focusManager.returnFocus();
+	    focusManager.teardownScopedFocus();
+	  },
+	
+	  handleKeyDown: function(event) {
+	    if (event.keyCode == 9 /*tab*/) scopeTab(this.refs.content, event);
+	    if (event.keyCode == 27 /*esc*/) {
+	      event.preventDefault();
+	      this.requestClose(event);
+	    }
+	  },
+	
+	  handleOverlayMouseDown: function(event) {
+	    if (this.shouldClose === null) {
+	      this.shouldClose = true;
+	    }
+	  },
+	
+	  handleOverlayMouseUp: function(event) {
+	    if (this.shouldClose && this.props.shouldCloseOnOverlayClick) {
+	      if (this.ownerHandlesClose())
+	        this.requestClose(event);
+	      else
+	        this.focusContent();
+	    }
+	    this.shouldClose = null;
+	  },
+	
+	  handleContentMouseDown: function(event) {
+	    this.shouldClose = false;
+	  },
+	
+	  handleContentMouseUp: function(event) {
+	    this.shouldClose = false;
+	  },
+	
+	  requestClose: function(event) {
+	    if (this.ownerHandlesClose())
+	      this.props.onRequestClose(event);
+	  },
+	
+	  ownerHandlesClose: function() {
+	    return this.props.onRequestClose;
+	  },
+	
+	  shouldBeClosed: function() {
+	    return !this.props.isOpen && !this.state.beforeClose;
+	  },
+	
+	  contentHasFocus: function() {
+	    return document.activeElement === this.refs.content || this.refs.content.contains(document.activeElement);
+	  },
+	
+	  buildClassName: function(which, additional) {
+	    var className = CLASS_NAMES[which].base;
+	    if (this.state.afterOpen)
+	      className += ' '+CLASS_NAMES[which].afterOpen;
+	    if (this.state.beforeClose)
+	      className += ' '+CLASS_NAMES[which].beforeClose;
+	    return additional ? className + ' ' + additional : className;
+	  },
+	
+	  render: function() {
+	    var contentStyles = (this.props.className) ? {} : this.props.defaultStyles.content;
+	    var overlayStyles = (this.props.overlayClassName) ? {} : this.props.defaultStyles.overlay;
+	
+	    return this.shouldBeClosed() ? div() : (
+	      div({
+	        ref: "overlay",
+	        className: this.buildClassName('overlay', this.props.overlayClassName),
+	        style: Assign({}, overlayStyles, this.props.style.overlay || {}),
+	        onMouseDown: this.handleOverlayMouseDown,
+	        onMouseUp: this.handleOverlayMouseUp
+	      },
+	        div({
+	          ref: "content",
+	          style: Assign({}, contentStyles, this.props.style.content || {}),
+	          className: this.buildClassName('content', this.props.className),
+	          tabIndex: "-1",
+	          onKeyDown: this.handleKeyDown,
+	          onMouseDown: this.handleContentMouseDown,
+	          onMouseUp: this.handleContentMouseUp,
+	          role: this.props.role
+	        },
+	          this.props.children
+	        )
+	      )
+	    );
+	  }
+	});
+
+
+/***/ },
+/* 296 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var findTabbable = __webpack_require__(297);
+	var modalElement = null;
+	var focusLaterElement = null;
+	var needToFocus = false;
+	
+	function handleBlur(event) {
+	  needToFocus = true;
+	}
+	
+	function handleFocus(event) {
+	  if (needToFocus) {
+	    needToFocus = false;
+	    if (!modalElement) {
+	      return;
+	    }
+	    // need to see how jQuery shims document.on('focusin') so we don't need the
+	    // setTimeout, firefox doesn't support focusin, if it did, we could focus
+	    // the element outside of a setTimeout. Side-effect of this implementation 
+	    // is that the document.body gets focus, and then we focus our element right 
+	    // after, seems fine.
+	    setTimeout(function() {
+	      if (modalElement.contains(document.activeElement))
+	        return;
+	      var el = (findTabbable(modalElement)[0] || modalElement);
+	      el.focus();
+	    }, 0);
+	  }
+	}
+	
+	exports.markForFocusLater = function() {
+	  focusLaterElement = document.activeElement;
+	};
+	
+	exports.returnFocus = function() {
+	  try {
+	    focusLaterElement.focus();
+	  }
+	  catch (e) {
+	    console.warn('You tried to return focus to '+focusLaterElement+' but it is not in the DOM anymore');
+	  }
+	  focusLaterElement = null;
+	};
+	
+	exports.setupScopedFocus = function(element) {
+	  modalElement = element;
+	
+	  if (window.addEventListener) {
+	    window.addEventListener('blur', handleBlur, false);
+	    document.addEventListener('focus', handleFocus, true);
+	  } else {
+	    window.attachEvent('onBlur', handleBlur);
+	    document.attachEvent('onFocus', handleFocus);
+	  }
+	};
+	
+	exports.teardownScopedFocus = function() {
+	  modalElement = null;
+	
+	  if (window.addEventListener) {
+	    window.removeEventListener('blur', handleBlur);
+	    document.removeEventListener('focus', handleFocus);
+	  } else {
+	    window.detachEvent('onBlur', handleBlur);
+	    document.detachEvent('onFocus', handleFocus);
+	  }
+	};
+	
+	
+
+
+/***/ },
+/* 297 */
+/***/ function(module, exports) {
+
+	/*!
+	 * Adapted from jQuery UI core
+	 *
+	 * http://jqueryui.com
+	 *
+	 * Copyright 2014 jQuery Foundation and other contributors
+	 * Released under the MIT license.
+	 * http://jquery.org/license
+	 *
+	 * http://api.jqueryui.com/category/ui-core/
+	 */
+	
+	function focusable(element, isTabIndexNotNaN) {
+	  var nodeName = element.nodeName.toLowerCase();
+	  return (/input|select|textarea|button|object/.test(nodeName) ?
+	    !element.disabled :
+	    "a" === nodeName ?
+	      element.href || isTabIndexNotNaN :
+	      isTabIndexNotNaN) && visible(element);
+	}
+	
+	function hidden(el) {
+	  return (el.offsetWidth <= 0 && el.offsetHeight <= 0) ||
+	    el.style.display === 'none';
+	}
+	
+	function visible(element) {
+	  while (element) {
+	    if (element === document.body) break;
+	    if (hidden(element)) return false;
+	    element = element.parentNode;
+	  }
+	  return true;
+	}
+	
+	function tabbable(element) {
+	  var tabIndex = element.getAttribute('tabindex');
+	  if (tabIndex === null) tabIndex = undefined;
+	  var isTabIndexNaN = isNaN(tabIndex);
+	  return (isTabIndexNaN || tabIndex >= 0) && focusable(element, !isTabIndexNaN);
+	}
+	
+	function findTabbableDescendants(element) {
+	  return [].slice.call(element.querySelectorAll('*'), 0).filter(function(el) {
+	    return tabbable(el);
+	  });
+	}
+	
+	module.exports = findTabbableDescendants;
+	
+
+
+/***/ },
+/* 298 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var findTabbable = __webpack_require__(297);
+	
+	module.exports = function(node, event) {
+	  var tabbable = findTabbable(node);
+	  if (!tabbable.length) {
+	      event.preventDefault();
+	      return;
+	  }
+	  var finalTabbable = tabbable[event.shiftKey ? 0 : tabbable.length - 1];
+	  var leavingFinalTabbable = (
+	    finalTabbable === document.activeElement ||
+	    // handle immediate shift+tab after opening with mouse
+	    node === document.activeElement
+	  );
+	  if (!leavingFinalTabbable) return;
+	  event.preventDefault();
+	  var target = tabbable[event.shiftKey ? tabbable.length - 1 : 0];
+	  target.focus();
+	};
+
+
+/***/ },
+/* 299 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	var baseAssign = __webpack_require__(300),
+	    createAssigner = __webpack_require__(306),
+	    keys = __webpack_require__(302);
+	
+	/**
+	 * A specialized version of `_.assign` for customizing assigned values without
+	 * support for argument juggling, multiple sources, and `this` binding `customizer`
+	 * functions.
+	 *
+	 * @private
+	 * @param {Object} object The destination object.
+	 * @param {Object} source The source object.
+	 * @param {Function} customizer The function to customize assigned values.
+	 * @returns {Object} Returns `object`.
+	 */
+	function assignWith(object, source, customizer) {
+	  var index = -1,
+	      props = keys(source),
+	      length = props.length;
+	
+	  while (++index < length) {
+	    var key = props[index],
+	        value = object[key],
+	        result = customizer(value, source[key], key, object, source);
+	
+	    if ((result === result ? (result !== value) : (value === value)) ||
+	        (value === undefined && !(key in object))) {
+	      object[key] = result;
+	    }
+	  }
+	  return object;
+	}
+	
+	/**
+	 * Assigns own enumerable properties of source object(s) to the destination
+	 * object. Subsequent sources overwrite property assignments of previous sources.
+	 * If `customizer` is provided it is invoked to produce the assigned values.
+	 * The `customizer` is bound to `thisArg` and invoked with five arguments:
+	 * (objectValue, sourceValue, key, object, source).
+	 *
+	 * **Note:** This method mutates `object` and is based on
+	 * [`Object.assign`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @alias extend
+	 * @category Object
+	 * @param {Object} object The destination object.
+	 * @param {...Object} [sources] The source objects.
+	 * @param {Function} [customizer] The function to customize assigned values.
+	 * @param {*} [thisArg] The `this` binding of `customizer`.
+	 * @returns {Object} Returns `object`.
+	 * @example
+	 *
+	 * _.assign({ 'user': 'barney' }, { 'age': 40 }, { 'user': 'fred' });
+	 * // => { 'user': 'fred', 'age': 40 }
+	 *
+	 * // using a customizer callback
+	 * var defaults = _.partialRight(_.assign, function(value, other) {
+	 *   return _.isUndefined(value) ? other : value;
+	 * });
+	 *
+	 * defaults({ 'user': 'barney' }, { 'age': 36 }, { 'user': 'fred' });
+	 * // => { 'user': 'barney', 'age': 36 }
+	 */
+	var assign = createAssigner(function(object, source, customizer) {
+	  return customizer
+	    ? assignWith(object, source, customizer)
+	    : baseAssign(object, source);
+	});
+	
+	module.exports = assign;
+
+
+/***/ },
+/* 300 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	var baseCopy = __webpack_require__(301),
+	    keys = __webpack_require__(302);
+	
+	/**
+	 * The base implementation of `_.assign` without support for argument juggling,
+	 * multiple sources, and `customizer` functions.
+	 *
+	 * @private
+	 * @param {Object} object The destination object.
+	 * @param {Object} source The source object.
+	 * @returns {Object} Returns `object`.
+	 */
+	function baseAssign(object, source) {
+	  return source == null
+	    ? object
+	    : baseCopy(source, keys(source), object);
+	}
+	
+	module.exports = baseAssign;
+
+
+/***/ },
+/* 301 */
+/***/ function(module, exports) {
+
+	/**
+	 * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	
+	/**
+	 * Copies properties of `source` to `object`.
+	 *
+	 * @private
+	 * @param {Object} source The object to copy properties from.
+	 * @param {Array} props The property names to copy.
+	 * @param {Object} [object={}] The object to copy properties to.
+	 * @returns {Object} Returns `object`.
+	 */
+	function baseCopy(source, props, object) {
+	  object || (object = {});
+	
+	  var index = -1,
+	      length = props.length;
+	
+	  while (++index < length) {
+	    var key = props[index];
+	    object[key] = source[key];
+	  }
+	  return object;
+	}
+	
+	module.exports = baseCopy;
+
+
+/***/ },
+/* 302 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * lodash 3.1.2 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	var getNative = __webpack_require__(303),
+	    isArguments = __webpack_require__(304),
+	    isArray = __webpack_require__(305);
+	
+	/** Used to detect unsigned integer values. */
+	var reIsUint = /^\d+$/;
+	
+	/** Used for native method references. */
+	var objectProto = Object.prototype;
+	
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+	
+	/* Native method references for those with the same name as other `lodash` methods. */
+	var nativeKeys = getNative(Object, 'keys');
+	
+	/**
+	 * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
+	 * of an array-like value.
+	 */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+	
+	/**
+	 * The base implementation of `_.property` without support for deep paths.
+	 *
+	 * @private
+	 * @param {string} key The key of the property to get.
+	 * @returns {Function} Returns the new function.
+	 */
+	function baseProperty(key) {
+	  return function(object) {
+	    return object == null ? undefined : object[key];
+	  };
+	}
+	
+	/**
+	 * Gets the "length" property value of `object`.
+	 *
+	 * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+	 * that affects Safari on at least iOS 8.1-8.3 ARM64.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {*} Returns the "length" value.
+	 */
+	var getLength = baseProperty('length');
+	
+	/**
+	 * Checks if `value` is array-like.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+	 */
+	function isArrayLike(value) {
+	  return value != null && isLength(getLength(value));
+	}
+	
+	/**
+	 * Checks if `value` is a valid array-like index.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
+	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
+	 */
+	function isIndex(value, length) {
+	  value = (typeof value == 'number' || reIsUint.test(value)) ? +value : -1;
+	  length = length == null ? MAX_SAFE_INTEGER : length;
+	  return value > -1 && value % 1 == 0 && value < length;
+	}
+	
+	/**
+	 * Checks if `value` is a valid array-like length.
+	 *
+	 * **Note:** This function is based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+	 */
+	function isLength(value) {
+	  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	}
+	
+	/**
+	 * A fallback implementation of `Object.keys` which creates an array of the
+	 * own enumerable property names of `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 */
+	function shimKeys(object) {
+	  var props = keysIn(object),
+	      propsLength = props.length,
+	      length = propsLength && object.length;
+	
+	  var allowIndexes = !!length && isLength(length) &&
+	    (isArray(object) || isArguments(object));
+	
+	  var index = -1,
+	      result = [];
+	
+	  while (++index < propsLength) {
+	    var key = props[index];
+	    if ((allowIndexes && isIndex(key, length)) || hasOwnProperty.call(object, key)) {
+	      result.push(key);
+	    }
+	  }
+	  return result;
+	}
+	
+	/**
+	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+	 * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(1);
+	 * // => false
+	 */
+	function isObject(value) {
+	  // Avoid a V8 JIT bug in Chrome 19-20.
+	  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+	
+	/**
+	 * Creates an array of the own enumerable property names of `object`.
+	 *
+	 * **Note:** Non-object values are coerced to objects. See the
+	 * [ES spec](http://ecma-international.org/ecma-262/6.0/#sec-object.keys)
+	 * for more details.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 * @example
+	 *
+	 * function Foo() {
+	 *   this.a = 1;
+	 *   this.b = 2;
+	 * }
+	 *
+	 * Foo.prototype.c = 3;
+	 *
+	 * _.keys(new Foo);
+	 * // => ['a', 'b'] (iteration order is not guaranteed)
+	 *
+	 * _.keys('hi');
+	 * // => ['0', '1']
+	 */
+	var keys = !nativeKeys ? shimKeys : function(object) {
+	  var Ctor = object == null ? undefined : object.constructor;
+	  if ((typeof Ctor == 'function' && Ctor.prototype === object) ||
+	      (typeof object != 'function' && isArrayLike(object))) {
+	    return shimKeys(object);
+	  }
+	  return isObject(object) ? nativeKeys(object) : [];
+	};
+	
+	/**
+	 * Creates an array of the own and inherited enumerable property names of `object`.
+	 *
+	 * **Note:** Non-object values are coerced to objects.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 * @example
+	 *
+	 * function Foo() {
+	 *   this.a = 1;
+	 *   this.b = 2;
+	 * }
+	 *
+	 * Foo.prototype.c = 3;
+	 *
+	 * _.keysIn(new Foo);
+	 * // => ['a', 'b', 'c'] (iteration order is not guaranteed)
+	 */
+	function keysIn(object) {
+	  if (object == null) {
+	    return [];
+	  }
+	  if (!isObject(object)) {
+	    object = Object(object);
+	  }
+	  var length = object.length;
+	  length = (length && isLength(length) &&
+	    (isArray(object) || isArguments(object)) && length) || 0;
+	
+	  var Ctor = object.constructor,
+	      index = -1,
+	      isProto = typeof Ctor == 'function' && Ctor.prototype === object,
+	      result = Array(length),
+	      skipIndexes = length > 0;
+	
+	  while (++index < length) {
+	    result[index] = (index + '');
+	  }
+	  for (var key in object) {
+	    if (!(skipIndexes && isIndex(key, length)) &&
+	        !(key == 'constructor' && (isProto || !hasOwnProperty.call(object, key)))) {
+	      result.push(key);
+	    }
+	  }
+	  return result;
+	}
+	
+	module.exports = keys;
+
+
+/***/ },
+/* 303 */
+/***/ function(module, exports) {
+
+	/**
+	 * lodash 3.9.1 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	
+	/** `Object#toString` result references. */
+	var funcTag = '[object Function]';
+	
+	/** Used to detect host constructors (Safari > 5). */
+	var reIsHostCtor = /^\[object .+?Constructor\]$/;
+	
+	/**
+	 * Checks if `value` is object-like.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+	 */
+	function isObjectLike(value) {
+	  return !!value && typeof value == 'object';
+	}
+	
+	/** Used for native method references. */
+	var objectProto = Object.prototype;
+	
+	/** Used to resolve the decompiled source of functions. */
+	var fnToString = Function.prototype.toString;
+	
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+	
+	/**
+	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objToString = objectProto.toString;
+	
+	/** Used to detect if a method is native. */
+	var reIsNative = RegExp('^' +
+	  fnToString.call(hasOwnProperty).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+	  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
+	);
+	
+	/**
+	 * Gets the native function at `key` of `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {string} key The key of the method to get.
+	 * @returns {*} Returns the function if it's native, else `undefined`.
+	 */
+	function getNative(object, key) {
+	  var value = object == null ? undefined : object[key];
+	  return isNative(value) ? value : undefined;
+	}
+	
+	/**
+	 * Checks if `value` is classified as a `Function` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @example
+	 *
+	 * _.isFunction(_);
+	 * // => true
+	 *
+	 * _.isFunction(/abc/);
+	 * // => false
+	 */
+	function isFunction(value) {
+	  // The use of `Object#toString` avoids issues with the `typeof` operator
+	  // in older versions of Chrome and Safari which return 'function' for regexes
+	  // and Safari 8 equivalents which return 'object' for typed array constructors.
+	  return isObject(value) && objToString.call(value) == funcTag;
+	}
+	
+	/**
+	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+	 * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(1);
+	 * // => false
+	 */
+	function isObject(value) {
+	  // Avoid a V8 JIT bug in Chrome 19-20.
+	  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+	
+	/**
+	 * Checks if `value` is a native function.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a native function, else `false`.
+	 * @example
+	 *
+	 * _.isNative(Array.prototype.push);
+	 * // => true
+	 *
+	 * _.isNative(_);
+	 * // => false
+	 */
+	function isNative(value) {
+	  if (value == null) {
+	    return false;
+	  }
+	  if (isFunction(value)) {
+	    return reIsNative.test(fnToString.call(value));
+	  }
+	  return isObjectLike(value) && reIsHostCtor.test(value);
+	}
+	
+	module.exports = getNative;
+
+
+/***/ },
+/* 304 */
+/***/ function(module, exports) {
+
+	/**
+	 * lodash (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modularize exports="npm" -o ./`
+	 * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+	 * Released under MIT license <https://lodash.com/license>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 */
+	
+	/** Used as references for various `Number` constants. */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+	
+	/** `Object#toString` result references. */
+	var argsTag = '[object Arguments]',
+	    funcTag = '[object Function]',
+	    genTag = '[object GeneratorFunction]';
+	
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+	
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+	
+	/**
+	 * Used to resolve the
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+	
+	/** Built-in value references. */
+	var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+	
+	/**
+	 * Checks if `value` is likely an `arguments` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isArguments(function() { return arguments; }());
+	 * // => true
+	 *
+	 * _.isArguments([1, 2, 3]);
+	 * // => false
+	 */
+	function isArguments(value) {
+	  // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
+	  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+	    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+	}
+	
+	/**
+	 * Checks if `value` is array-like. A value is considered array-like if it's
+	 * not a function and has a `value.length` that's an integer greater than or
+	 * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+	 * @example
+	 *
+	 * _.isArrayLike([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArrayLike(document.body.children);
+	 * // => true
+	 *
+	 * _.isArrayLike('abc');
+	 * // => true
+	 *
+	 * _.isArrayLike(_.noop);
+	 * // => false
+	 */
+	function isArrayLike(value) {
+	  return value != null && isLength(value.length) && !isFunction(value);
+	}
+	
+	/**
+	 * This method is like `_.isArrayLike` except that it also checks if `value`
+	 * is an object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an array-like object,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isArrayLikeObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArrayLikeObject(document.body.children);
+	 * // => true
+	 *
+	 * _.isArrayLikeObject('abc');
+	 * // => false
+	 *
+	 * _.isArrayLikeObject(_.noop);
+	 * // => false
+	 */
+	function isArrayLikeObject(value) {
+	  return isObjectLike(value) && isArrayLike(value);
+	}
+	
+	/**
+	 * Checks if `value` is classified as a `Function` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a function, else `false`.
+	 * @example
+	 *
+	 * _.isFunction(_);
+	 * // => true
+	 *
+	 * _.isFunction(/abc/);
+	 * // => false
+	 */
+	function isFunction(value) {
+	  // The use of `Object#toString` avoids issues with the `typeof` operator
+	  // in Safari 8-9 which returns 'object' for typed array and other constructors.
+	  var tag = isObject(value) ? objectToString.call(value) : '';
+	  return tag == funcTag || tag == genTag;
+	}
+	
+	/**
+	 * Checks if `value` is a valid array-like length.
+	 *
+	 * **Note:** This method is loosely based on
+	 * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+	 * @example
+	 *
+	 * _.isLength(3);
+	 * // => true
+	 *
+	 * _.isLength(Number.MIN_VALUE);
+	 * // => false
+	 *
+	 * _.isLength(Infinity);
+	 * // => false
+	 *
+	 * _.isLength('3');
+	 * // => false
+	 */
+	function isLength(value) {
+	  return typeof value == 'number' &&
+	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	}
+	
+	/**
+	 * Checks if `value` is the
+	 * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+	 * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(_.noop);
+	 * // => true
+	 *
+	 * _.isObject(null);
+	 * // => false
+	 */
+	function isObject(value) {
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+	
+	/**
+	 * Checks if `value` is object-like. A value is object-like if it's not `null`
+	 * and has a `typeof` result of "object".
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+	 * @example
+	 *
+	 * _.isObjectLike({});
+	 * // => true
+	 *
+	 * _.isObjectLike([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObjectLike(_.noop);
+	 * // => false
+	 *
+	 * _.isObjectLike(null);
+	 * // => false
+	 */
+	function isObjectLike(value) {
+	  return !!value && typeof value == 'object';
+	}
+	
+	module.exports = isArguments;
+
+
+/***/ },
+/* 305 */
+/***/ function(module, exports) {
+
+	/**
+	 * lodash 3.0.4 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	
+	/** `Object#toString` result references. */
+	var arrayTag = '[object Array]',
+	    funcTag = '[object Function]';
+	
+	/** Used to detect host constructors (Safari > 5). */
+	var reIsHostCtor = /^\[object .+?Constructor\]$/;
+	
+	/**
+	 * Checks if `value` is object-like.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+	 */
+	function isObjectLike(value) {
+	  return !!value && typeof value == 'object';
+	}
+	
+	/** Used for native method references. */
+	var objectProto = Object.prototype;
+	
+	/** Used to resolve the decompiled source of functions. */
+	var fnToString = Function.prototype.toString;
+	
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+	
+	/**
+	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objToString = objectProto.toString;
+	
+	/** Used to detect if a method is native. */
+	var reIsNative = RegExp('^' +
+	  fnToString.call(hasOwnProperty).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+	  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
+	);
+	
+	/* Native method references for those with the same name as other `lodash` methods. */
+	var nativeIsArray = getNative(Array, 'isArray');
+	
+	/**
+	 * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
+	 * of an array-like value.
+	 */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+	
+	/**
+	 * Gets the native function at `key` of `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {string} key The key of the method to get.
+	 * @returns {*} Returns the function if it's native, else `undefined`.
+	 */
+	function getNative(object, key) {
+	  var value = object == null ? undefined : object[key];
+	  return isNative(value) ? value : undefined;
+	}
+	
+	/**
+	 * Checks if `value` is a valid array-like length.
+	 *
+	 * **Note:** This function is based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+	 */
+	function isLength(value) {
+	  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	}
+	
+	/**
+	 * Checks if `value` is classified as an `Array` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @example
+	 *
+	 * _.isArray([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArray(function() { return arguments; }());
+	 * // => false
+	 */
+	var isArray = nativeIsArray || function(value) {
+	  return isObjectLike(value) && isLength(value.length) && objToString.call(value) == arrayTag;
+	};
+	
+	/**
+	 * Checks if `value` is classified as a `Function` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @example
+	 *
+	 * _.isFunction(_);
+	 * // => true
+	 *
+	 * _.isFunction(/abc/);
+	 * // => false
+	 */
+	function isFunction(value) {
+	  // The use of `Object#toString` avoids issues with the `typeof` operator
+	  // in older versions of Chrome and Safari which return 'function' for regexes
+	  // and Safari 8 equivalents which return 'object' for typed array constructors.
+	  return isObject(value) && objToString.call(value) == funcTag;
+	}
+	
+	/**
+	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+	 * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(1);
+	 * // => false
+	 */
+	function isObject(value) {
+	  // Avoid a V8 JIT bug in Chrome 19-20.
+	  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+	
+	/**
+	 * Checks if `value` is a native function.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a native function, else `false`.
+	 * @example
+	 *
+	 * _.isNative(Array.prototype.push);
+	 * // => true
+	 *
+	 * _.isNative(_);
+	 * // => false
+	 */
+	function isNative(value) {
+	  if (value == null) {
+	    return false;
+	  }
+	  if (isFunction(value)) {
+	    return reIsNative.test(fnToString.call(value));
+	  }
+	  return isObjectLike(value) && reIsHostCtor.test(value);
+	}
+	
+	module.exports = isArray;
+
+
+/***/ },
+/* 306 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * lodash 3.1.1 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	var bindCallback = __webpack_require__(307),
+	    isIterateeCall = __webpack_require__(308),
+	    restParam = __webpack_require__(309);
+	
+	/**
+	 * Creates a function that assigns properties of source object(s) to a given
+	 * destination object.
+	 *
+	 * **Note:** This function is used to create `_.assign`, `_.defaults`, and `_.merge`.
+	 *
+	 * @private
+	 * @param {Function} assigner The function to assign values.
+	 * @returns {Function} Returns the new assigner function.
+	 */
+	function createAssigner(assigner) {
+	  return restParam(function(object, sources) {
+	    var index = -1,
+	        length = object == null ? 0 : sources.length,
+	        customizer = length > 2 ? sources[length - 2] : undefined,
+	        guard = length > 2 ? sources[2] : undefined,
+	        thisArg = length > 1 ? sources[length - 1] : undefined;
+	
+	    if (typeof customizer == 'function') {
+	      customizer = bindCallback(customizer, thisArg, 5);
+	      length -= 2;
+	    } else {
+	      customizer = typeof thisArg == 'function' ? thisArg : undefined;
+	      length -= (customizer ? 1 : 0);
+	    }
+	    if (guard && isIterateeCall(sources[0], sources[1], guard)) {
+	      customizer = length < 3 ? undefined : customizer;
+	      length = 1;
+	    }
+	    while (++index < length) {
+	      var source = sources[index];
+	      if (source) {
+	        assigner(object, source, customizer);
+	      }
+	    }
+	    return object;
+	  });
+	}
+	
+	module.exports = createAssigner;
+
+
+/***/ },
+/* 307 */
+/***/ function(module, exports) {
+
+	/**
+	 * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	
+	/**
+	 * A specialized version of `baseCallback` which only supports `this` binding
+	 * and specifying the number of arguments to provide to `func`.
+	 *
+	 * @private
+	 * @param {Function} func The function to bind.
+	 * @param {*} thisArg The `this` binding of `func`.
+	 * @param {number} [argCount] The number of arguments to provide to `func`.
+	 * @returns {Function} Returns the callback.
+	 */
+	function bindCallback(func, thisArg, argCount) {
+	  if (typeof func != 'function') {
+	    return identity;
+	  }
+	  if (thisArg === undefined) {
+	    return func;
+	  }
+	  switch (argCount) {
+	    case 1: return function(value) {
+	      return func.call(thisArg, value);
+	    };
+	    case 3: return function(value, index, collection) {
+	      return func.call(thisArg, value, index, collection);
+	    };
+	    case 4: return function(accumulator, value, index, collection) {
+	      return func.call(thisArg, accumulator, value, index, collection);
+	    };
+	    case 5: return function(value, other, key, object, source) {
+	      return func.call(thisArg, value, other, key, object, source);
+	    };
+	  }
+	  return function() {
+	    return func.apply(thisArg, arguments);
+	  };
+	}
+	
+	/**
+	 * This method returns the first argument provided to it.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Utility
+	 * @param {*} value Any value.
+	 * @returns {*} Returns `value`.
+	 * @example
+	 *
+	 * var object = { 'user': 'fred' };
+	 *
+	 * _.identity(object) === object;
+	 * // => true
+	 */
+	function identity(value) {
+	  return value;
+	}
+	
+	module.exports = bindCallback;
+
+
+/***/ },
+/* 308 */
+/***/ function(module, exports) {
+
+	/**
+	 * lodash 3.0.9 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	
+	/** Used to detect unsigned integer values. */
+	var reIsUint = /^\d+$/;
+	
+	/**
+	 * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+	 * of an array-like value.
+	 */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+	
+	/**
+	 * The base implementation of `_.property` without support for deep paths.
+	 *
+	 * @private
+	 * @param {string} key The key of the property to get.
+	 * @returns {Function} Returns the new function.
+	 */
+	function baseProperty(key) {
+	  return function(object) {
+	    return object == null ? undefined : object[key];
+	  };
+	}
+	
+	/**
+	 * Gets the "length" property value of `object`.
+	 *
+	 * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+	 * that affects Safari on at least iOS 8.1-8.3 ARM64.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {*} Returns the "length" value.
+	 */
+	var getLength = baseProperty('length');
+	
+	/**
+	 * Checks if `value` is array-like.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+	 */
+	function isArrayLike(value) {
+	  return value != null && isLength(getLength(value));
+	}
+	
+	/**
+	 * Checks if `value` is a valid array-like index.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
+	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
+	 */
+	function isIndex(value, length) {
+	  value = (typeof value == 'number' || reIsUint.test(value)) ? +value : -1;
+	  length = length == null ? MAX_SAFE_INTEGER : length;
+	  return value > -1 && value % 1 == 0 && value < length;
+	}
+	
+	/**
+	 * Checks if the provided arguments are from an iteratee call.
+	 *
+	 * @private
+	 * @param {*} value The potential iteratee value argument.
+	 * @param {*} index The potential iteratee index or key argument.
+	 * @param {*} object The potential iteratee object argument.
+	 * @returns {boolean} Returns `true` if the arguments are from an iteratee call, else `false`.
+	 */
+	function isIterateeCall(value, index, object) {
+	  if (!isObject(object)) {
+	    return false;
+	  }
+	  var type = typeof index;
+	  if (type == 'number'
+	      ? (isArrayLike(object) && isIndex(index, object.length))
+	      : (type == 'string' && index in object)) {
+	    var other = object[index];
+	    return value === value ? (value === other) : (other !== other);
+	  }
+	  return false;
+	}
+	
+	/**
+	 * Checks if `value` is a valid array-like length.
+	 *
+	 * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+	 */
+	function isLength(value) {
+	  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	}
+	
+	/**
+	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+	 * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(1);
+	 * // => false
+	 */
+	function isObject(value) {
+	  // Avoid a V8 JIT bug in Chrome 19-20.
+	  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+	
+	module.exports = isIterateeCall;
+
+
+/***/ },
+/* 309 */
+/***/ function(module, exports) {
+
+	/**
+	 * lodash 3.6.1 (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modern modularize exports="npm" -o ./`
+	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+	 * Available under MIT license <https://lodash.com/license>
+	 */
+	
+	/** Used as the `TypeError` message for "Functions" methods. */
+	var FUNC_ERROR_TEXT = 'Expected a function';
+	
+	/* Native method references for those with the same name as other `lodash` methods. */
+	var nativeMax = Math.max;
+	
+	/**
+	 * Creates a function that invokes `func` with the `this` binding of the
+	 * created function and arguments from `start` and beyond provided as an array.
+	 *
+	 * **Note:** This method is based on the [rest parameter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Function
+	 * @param {Function} func The function to apply a rest parameter to.
+	 * @param {number} [start=func.length-1] The start position of the rest parameter.
+	 * @returns {Function} Returns the new function.
+	 * @example
+	 *
+	 * var say = _.restParam(function(what, names) {
+	 *   return what + ' ' + _.initial(names).join(', ') +
+	 *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
+	 * });
+	 *
+	 * say('hello', 'fred', 'barney', 'pebbles');
+	 * // => 'hello fred, barney, & pebbles'
+	 */
+	function restParam(func, start) {
+	  if (typeof func != 'function') {
+	    throw new TypeError(FUNC_ERROR_TEXT);
+	  }
+	  start = nativeMax(start === undefined ? (func.length - 1) : (+start || 0), 0);
+	  return function() {
+	    var args = arguments,
+	        index = -1,
+	        length = nativeMax(args.length - start, 0),
+	        rest = Array(length);
+	
+	    while (++index < length) {
+	      rest[index] = args[start + index];
+	    }
+	    switch (start) {
+	      case 0: return func.call(this, rest);
+	      case 1: return func.call(this, args[0], rest);
+	      case 2: return func.call(this, args[0], args[1], rest);
+	    }
+	    var otherArgs = Array(start + 1);
+	    index = -1;
+	    while (++index < start) {
+	      otherArgs[index] = args[index];
+	    }
+	    otherArgs[start] = rest;
+	    return func.apply(this, otherArgs);
+	  };
+	}
+	
+	module.exports = restParam;
+
+
+/***/ },
+/* 310 */
+/***/ function(module, exports) {
+
+	var _element = typeof document !== 'undefined' ? document.body : null;
+	
+	function setElement(element) {
+	  if (typeof element === 'string') {
+	    var el = document.querySelectorAll(element);
+	    element = 'length' in el ? el[0] : el;
+	  }
+	  _element = element || _element;
+	  return _element;
+	}
+	
+	function hide(appElement) {
+	  validateElement(appElement);
+	  (appElement || _element).setAttribute('aria-hidden', 'true');
+	}
+	
+	function show(appElement) {
+	  validateElement(appElement);
+	  (appElement || _element).removeAttribute('aria-hidden');
+	}
+	
+	function toggle(shouldHide, appElement) {
+	  if (shouldHide)
+	    hide(appElement);
+	  else
+	    show(appElement);
+	}
+	
+	function validateElement(appElement) {
+	  if (!appElement && !_element)
+	    throw new Error('react-modal: You must set an element with `Modal.setAppElement(el)` to make this accessible');
+	}
+	
+	function resetForTesting() {
+	  _element = document.body;
+	}
+	
+	exports.toggle = toggle;
+	exports.setElement = setElement;
+	exports.show = show;
+	exports.hide = hide;
+	exports.resetForTesting = resetForTesting;
+
+
+/***/ },
+/* 311 */
+/***/ function(module, exports) {
+
+	module.exports = function(opts) {
+	  return new ElementClass(opts)
+	}
+	
+	function indexOf(arr, prop) {
+	  if (arr.indexOf) return arr.indexOf(prop)
+	  for (var i = 0, len = arr.length; i < len; i++)
+	    if (arr[i] === prop) return i
+	  return -1
+	}
+	
+	function ElementClass(opts) {
+	  if (!(this instanceof ElementClass)) return new ElementClass(opts)
+	  var self = this
+	  if (!opts) opts = {}
+	
+	  // similar doing instanceof HTMLElement but works in IE8
+	  if (opts.nodeType) opts = {el: opts}
+	
+	  this.opts = opts
+	  this.el = opts.el || document.body
+	  if (typeof this.el !== 'object') this.el = document.querySelector(this.el)
+	}
+	
+	ElementClass.prototype.add = function(className) {
+	  var el = this.el
+	  if (!el) return
+	  if (el.className === "") return el.className = className
+	  var classes = el.className.split(' ')
+	  if (indexOf(classes, className) > -1) return classes
+	  classes.push(className)
+	  el.className = classes.join(' ')
+	  return classes
+	}
+	
+	ElementClass.prototype.remove = function(className) {
+	  var el = this.el
+	  if (!el) return
+	  if (el.className === "") return
+	  var classes = el.className.split(' ')
+	  var idx = indexOf(classes, className)
+	  if (idx > -1) classes.splice(idx, 1)
+	  el.className = classes.join(' ')
+	  return classes
+	}
+	
+	ElementClass.prototype.has = function(className) {
+	  var el = this.el
+	  if (!el) return
+	  var classes = el.className.split(' ')
+	  return indexOf(classes, className) > -1
+	}
+	
+	ElementClass.prototype.toggle = function(className) {
+	  var el = this.el
+	  if (!el) return
+	  if (this.has(className)) this.remove(className)
+	  else this.add(className)
+	}
+
 
 /***/ }
 /******/ ]);

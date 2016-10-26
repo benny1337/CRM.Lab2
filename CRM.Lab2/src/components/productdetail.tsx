@@ -2,10 +2,12 @@
 import * as Model from '../domain/model';
 import * as Actions from '../domain/actions';
 import { connect } from 'react-redux'
-import * as Enumerable from "linq";
+//import * as Enumerable from "linq";
+import { ImageCSVSlider } from './imagecsvslider';
 
 interface IProps {
-    products: Model.IProduct[];
+    loadProduct(seoname: string): () => void;
+    product: Model.IProduct;
 }
 
 class ProductDetailDef extends React.Component<IProps, {}> {
@@ -13,19 +15,22 @@ class ProductDetailDef extends React.Component<IProps, {}> {
     constructor(props: IProps) {
         super(props);
     }
-    
+
+    componentDidMount() {
+        var productname = (this.props as any).params.productname;
+        this.props.loadProduct(productname);
+    }
 
     render() {
-        var productname = (this.props as any).params.productname;
-        if (!productname)
+        if (!this.props.product)
             return null;
-
-        var prod = Enumerable.from(this.props.products).where(x => x.SeoName == productname).first();
-
+        
         return (
             <div>
-                {prod.Name}
-                <img src={prod.ImgUrl} />
+                {this.props.product.Name}
+                <img src={this.props.product.ImgUrl} />
+
+                <ImageCSVSlider csvimages={this.props.product.OtherImagesCSV} />
             </div>
         )
     }
@@ -33,12 +38,16 @@ class ProductDetailDef extends React.Component<IProps, {}> {
 
 const mapStateToProps = (state: any) => {
     return {
-        products: state.appstate.products,        
+        product: state.appstate.currentProduct,        
     }
 }
 
 const mapDispatchToProps = (dispatch: any) => {
-    return { }
+    return {
+        loadProduct: (seoname: string) => {
+            dispatch(Actions.startRecievingProduct(seoname));
+        },
+    }
 }
 const ProductDetail = connect(
     mapStateToProps,

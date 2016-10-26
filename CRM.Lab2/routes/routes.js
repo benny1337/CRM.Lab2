@@ -22,10 +22,14 @@ router.get('/product/:productname', function (req, res) {
 });
 
 router.get('/products/all', products.getAll, function (req, res) {
-
     res.setHeader('Content-Type', 'application/json');    
     res.send(JSON.stringify(res.products));
 });
+router.get('/products/one/:seoname', products.getOne, function (req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(res.product));
+});
+
 
 // PROFILE SECTION =========================
 router.get('/profile', isLoggedIn, function (req, res) {

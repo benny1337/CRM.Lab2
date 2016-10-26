@@ -5,12 +5,14 @@ import * as Actions from './actions';
 interface IState {
     user: Model.IUser;
     products: Model.IProduct[];
+    currentProduct: Model.IProduct;
     isLoading: boolean;    
 }
 
 function appstate(state = {
     user: null,
     isLoading: false,
+    currentProduct: null,
     products: []
 } as IState, action: Model.IAction) {
     switch (action.type) {
@@ -31,6 +33,16 @@ function appstate(state = {
             return (<any>Object).assign({}, state, {
                 isLoading: false,
                 products: action.payload
+            });
+        case Actions.REQUESTING_A_PRODUCT:
+            return (<any>Object).assign({}, state, {
+                isLoading: true,
+                currentProduct: null
+            });
+        case Actions.RECIEVED_A_PRODUCT:
+            return (<any>Object).assign({}, state, {
+                isLoading: false,
+                currentProduct: action.payload
             });
         default: return state;
     }

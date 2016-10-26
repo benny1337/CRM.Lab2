@@ -42,3 +42,24 @@ export function startRecievingProducts() {
         }).catch(function (error) { });
     }
 }
+
+export const REQUESTING_A_PRODUCT = "REQUESTING_A_PRODUCT";
+export function requestingProduct() {
+    return { type: REQUESTING_A_PRODUCT, isAsync: true } as Model.IAction
+}
+
+export const RECIEVED_A_PRODUCT = "RECIEVED_A_PRODUCT";
+export function recievedProduct(prod: Model.IProduct) {
+    return { type: RECIEVED_A_PRODUCT, isAsync: true, payload: prod } as Model.IAction
+}
+
+export const START_RECIEVING_A_PRODUCT = "START_RECIEVING_A_PRODUCT";
+export function startRecievingProduct(seoname: string) {
+    return function (dispatch: any) {
+        dispatch(requestingProduct());
+        let service = new Service.Service();
+        return service.ProductService.retrieveProduct(seoname).then(function (product) {
+            dispatch(recievedProduct(product));
+        }).catch(function (error) { });
+    }
+}
