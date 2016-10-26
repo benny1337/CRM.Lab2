@@ -28,10 +28,10 @@ namespace CRM.Lab2.ProductWebJob
         {
             Console.WriteLine("continuous started");
             var repo = new ProductRepo();
-
+            var db = new Mongo();
             var prods = repo.Products().Result;
             
-            var collection = GetCollectionForEdit();
+            var collection = db.GetProductCollectionForEdit();
             foreach (var prod in prods)
             {
                 var filter_id = Builders<Product>.Filter.Eq("Id", prod.Id);
@@ -41,36 +41,6 @@ namespace CRM.Lab2.ProductWebJob
             }            
         }
 
-        public static void Save(IEnumerable<Product> products)
-        {
-           
-        }
-
-        private static IMongoCollection<Product> GetCollectionForEdit()
-        {            
-            var userName = "crmlab2";
-            var host = "crmlab2.documents.azure.com";
-            var password = "";
-            var dbName = "admin";
-            var collectionName = "products";
-
-            MongoClientSettings settings = new MongoClientSettings();
-            settings.Server = new MongoServerAddress(host, 10250);
-            settings.UseSsl = true;
-            settings.SslSettings = new SslSettings();
-            settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
-
-            MongoIdentity identity = new MongoInternalIdentity(dbName, userName);
-            MongoIdentityEvidence evidence = new PasswordEvidence(password);
-
-            settings.Credentials = new List<MongoCredential>()
-            {
-                new MongoCredential("SCRAM-SHA-1", identity, evidence)
-            };
-            MongoClient client = new MongoClient(settings);
-            var database = client.GetDatabase(dbName);
-            var todoTaskCollection = database.GetCollection<Product>(collectionName);
-            return todoTaskCollection;
-        }
+        
     }
 }

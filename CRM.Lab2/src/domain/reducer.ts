@@ -23,7 +23,7 @@ function appstate(state = {
                 isLoading: false,
                 user: action.payload
             });
-        case Actions.REQUESTING_PRODUCTS:
+        case Actions.REQUESTING_PRODUCTS:            
             return (<any>Object).assign({}, state, {
                 isLoading: true,
             });

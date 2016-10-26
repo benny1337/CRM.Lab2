@@ -27,7 +27,7 @@ namespace CRM.Lab2.Repository
             {
                 var result = await _api.GetList("stq_products", new CRMGetListOptions()
                 {
-                    Select = new List<string>() { "stq_name", "stq_price", "stq_text", "stq_imgurl", "stq_productid" }.ToArray()                    
+                    Select = new List<string>() { "stq_name", "stq_price", "stq_text", "stq_imgurl", "stq_productid", "stq_supplier", "stq_otherimagescsv", "stq_attributescsv" }.ToArray()                    
                 });
                 
 
@@ -38,7 +38,10 @@ namespace CRM.Lab2.Repository
                         Price = e.stq_price ?? 0,
                         ImgUrl = e.stq_imgurl,
                         Text = e.stq_text,
-                        Id = new Guid(e.stq_productid)
+                        Id = new Guid(e.stq_productid),
+                        Supplier = e.stq_supplier, 
+                        AttributesCSV = e.stq_attributescsv,
+                        OtherImagesCSV = e.stq_otherimagescsv
                     };
                 });
             }

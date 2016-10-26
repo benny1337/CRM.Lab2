@@ -25,6 +25,10 @@ export interface IProduct {
     Text: string;
     Id: string;
     ImgUrl: string;
+    Supplier: string;
+    OtherImagesCSV: string;
+    AttributesCSV: string;
+    SeoName: string;
 }
 export interface IAction {
     type: string;

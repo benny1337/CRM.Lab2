@@ -7,8 +7,9 @@ class ProductService {
             fetch('/products/all').then(function (response) {
                 return response.json();
             }).then(function (data) {
-                resolve(data as Model.IProduct[]);                
+                resolve(data as Model.IProduct[]);
             }).catch(function (ex) {
+                console.log(ex);
                 reject(ex);
             });
         });
@@ -28,7 +29,7 @@ class UserService {
                 var data = JSON.parse(text);
                 var user = data as Model.IUser;
                 setTimeout(function () { resolve(user); }, 3000);
-            }).catch(function (ex) {                
+            }).catch(function (ex) {
                 var err = {
                     message: ex,
                     severity: Model.ErrorSeverity.MorbidDeathFatalError

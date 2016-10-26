@@ -50,6 +50,7 @@
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="src\components\productdetail.tsx" />
     <Content Include="src\components\about.tsx" />
     <Content Include="src\components\profile.tsx" />
     <Content Include="src\components\app.tsx" />
@@ -61,6 +62,7 @@
     <Content Include="src\views\index.tsx" />
     <Content Include="tsconfig.json" />
     <Content Include="typings.json" />
+    <Content Include="typings\globals\linq\typings.json" />
     <Content Include="views\profile.jade" />
     <Content Include="views\products.jade" />
     <Content Include="views\index.jade" />
@@ -85,6 +87,7 @@
     <Folder Include="src\views\" />
     <Folder Include="typings\" />
     <Folder Include="typings\globals\" />
+    <Folder Include="typings\globals\linq\" />
     <Folder Include="typings\globals\react-dom\" />
     <Folder Include="typings\globals\react\" />
     <Folder Include="typings\globals\whatwg-fetch\" />
@@ -103,6 +106,7 @@
     <TypeScriptCompile Include="src\domain\model.ts" />
     <TypeScriptCompile Include="src\domain\reducer.ts" />
     <TypeScriptCompile Include="src\domain\service.ts" />
+    <TypeScriptCompile Include="typings\globals\linq\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\react-dom\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\react\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\whatwg-fetch\index.d.ts" />

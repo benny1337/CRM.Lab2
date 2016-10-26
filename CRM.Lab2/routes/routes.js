@@ -17,6 +17,10 @@ router.get('/products', function (req, res) {
     res.render('index', { header: 'Products' });
 });
 
+router.get('/product/:productname', function (req, res) {
+    res.render('index', { header: 'Products' });
+});
+
 router.get('/products/all', products.getAll, function (req, res) {
 
     res.setHeader('Content-Type', 'application/json');    

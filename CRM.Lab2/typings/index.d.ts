@@ -1,4 +1,5 @@
 /// <reference path="globals/history/index.d.ts" />
+/// <reference path="globals/linq/index.d.ts" />
 /// <reference path="globals/react-dom/index.d.ts" />
 /// <reference path="globals/react-redux/index.d.ts" />
 /// <reference path="globals/react-router/history/index.d.ts" />
