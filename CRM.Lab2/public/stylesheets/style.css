@@ -43,3 +43,7 @@ a {
     border: 1px solid #ccc;
     cursor:pointer;
 }
+.productwrapper{
+    display:flex;
+    flex-direction: row;
+}

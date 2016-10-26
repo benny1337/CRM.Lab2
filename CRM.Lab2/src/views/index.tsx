@@ -19,8 +19,7 @@ ReactDOM.render(
     <Provider store={store}>
         <Router history={browserHistory}>
             <Route path="/" component={App}>
-                <IndexRoute component={Home} />
-                <Route path="/products" component={ProductTable} />
+                <IndexRoute component={ProductTable} />                
                 <Route path="/product/:productname" component={ProductDetail} />                
                 <Route path="/profile" component={Profile} />
                 <Route path="/about" component={About} />

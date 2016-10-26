@@ -31,7 +31,7 @@ class ProductTableDef extends React.Component<IProps, {}> {
     render() {
         var self = this;        
         return (
-            <div>                
+            <div className="productwrapper">                
                 <Spinner isLoading={self.props.isLoading} />
                 {self.props.products.map(function (product, index) {    
                     var url = "/product/" + product.SeoName;                

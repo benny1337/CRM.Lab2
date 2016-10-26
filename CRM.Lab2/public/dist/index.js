@@ -53,7 +53,6 @@
 	const reducer_1 = __webpack_require__(257);
 	const redux_thunk_1 = __webpack_require__(262);
 	const app_1 = __webpack_require__(263);
-	const home_1 = __webpack_require__(266);
 	const producttable_1 = __webpack_require__(267);
 	const productdetail_1 = __webpack_require__(268);
 	const profile_1 = __webpack_require__(269);
@@ -62,8 +61,7 @@
 	ReactDOM.render(React.createElement(react_redux_1.Provider, {store: store}, 
 	    React.createElement(react_router_1.Router, {history: react_router_1.browserHistory}, 
 	        React.createElement(react_router_1.Route, {path: "/", component: app_1.default}, 
-	            React.createElement(react_router_1.IndexRoute, {component: home_1.Home}), 
-	            React.createElement(react_router_1.Route, {path: "/products", component: producttable_1.default}), 
+	            React.createElement(react_router_1.IndexRoute, {component: producttable_1.default}), 
 	            React.createElement(react_router_1.Route, {path: "/product/:productname", component: productdetail_1.default}), 
 	            React.createElement(react_router_1.Route, {path: "/profile", component: profile_1.Profile}), 
 	            React.createElement(react_router_1.Route, {path: "/about", component: about_1.About}))
@@ -29264,10 +29262,9 @@
 	        var self = this;
 	        return (React.createElement("div", null, 
 	            React.createElement("div", {className: "menu-wrapper"}, 
-	                React.createElement(react_router_1.Link, {to: "/"}, "Home"), 
-	                React.createElement(react_router_1.Link, {to: "/products"}, "catalouge"), 
-	                React.createElement(react_router_1.Link, {to: "/profile"}, "meine pages"), 
-	                React.createElement(react_router_1.Link, {to: "/about"}, "about"), 
+	                React.createElement(react_router_1.Link, {to: "/"}, "Produkter"), 
+	                React.createElement(react_router_1.Link, {to: "/profile"}, "Mina Sidor"), 
+	                React.createElement(react_router_1.Link, {to: "/about"}, "Om"), 
 	                React.createElement(spinner_1.default, {isLoading: this.props.isLoading}), 
 	                self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" : React.createElement(loginoptions_1.LoginOptions, null)), 
 	            React.createElement("div", null, this.props.children)));
@@ -29353,23 +29350,7 @@
 
 
 /***/ },
-/* 266 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	class Home extends React.Component {
-	    constructor(props) {
-	        super(props);
-	    }
-	    render() {
-	        return (React.createElement("div", null, "this is the index"));
-	    }
-	}
-	exports.Home = Home;
-
-
-/***/ },
+/* 266 */,
 /* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -29392,7 +29373,7 @@
 	    }
 	    render() {
 	        var self = this;
-	        return (React.createElement("div", null, 
+	        return (React.createElement("div", {className: "productwrapper"}, 
 	            React.createElement(spinner_1.default, {isLoading: self.props.isLoading}), 
 	            self.props.products.map(function (product, index) {
 	                var url = "/product/" + product.SeoName;

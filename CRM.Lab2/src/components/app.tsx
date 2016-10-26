@@ -27,10 +27,9 @@ class AppDef extends React.Component<IProps, {}> {
         return (
             <div>
                 <div className="menu-wrapper">
-                    <Link to="/">Home</Link>
-                    <Link to="/products">catalouge</Link>
-                    <Link to="/profile">meine pages</Link>
-                    <Link to="/about">about</Link>
+                    <Link to="/">Produkter</Link>                    
+                    <Link to="/profile">Mina Sidor</Link>
+                    <Link to="/about">Om</Link>
 
                     <Spinner isLoading={this.props.isLoading} />{self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" : <LoginOptions />}
                 </div>
