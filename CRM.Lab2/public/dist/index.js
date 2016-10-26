@@ -29378,11 +29378,20 @@
 	            self.props.products.map(function (product, index) {
 	                var url = "/product/" + product.SeoName;
 	                return (React.createElement("div", {key: index, className: "product", onClick: () => self.onnavigate(url)}, 
-	                    React.createElement("h2", null, product.Name), 
-	                    React.createElement("img", {src: product.ImgUrl, width: "100"}), 
-	                    product.Price, 
-	                    ":-", 
-	                    product.Supplier));
+	                    React.createElement("div", {className: "title"}, 
+	                        React.createElement("div", {className: "avatar"}, 
+	                            React.createElement("img", {src: "https://d4n5pyzr6ibrc.cloudfront.net/media/27FB7F0C-9885-42A6-9E0C19C35242B5AC/D968A2D0-35B8-41C6-A94A0C5C5FCA0725/thul-43c319fb-cc3a-56b5-afdc-f3544a682986.jpg?response-content-disposition=inline"})
+	                        ), 
+	                        React.createElement("div", {className: "title-content"}, 
+	                            React.createElement("h5", null, product.Name), 
+	                            React.createElement("p", null, "this is a subtitle"))), 
+	                    React.createElement("div", {className: "image"}, 
+	                        React.createElement("img", {src: product.ImgUrl})
+	                    ), 
+	                    React.createElement("div", {className: "text"}, 
+	                        product.Price, 
+	                        ":-", 
+	                        product.Supplier)));
 	            })));
 	    }
 	}
