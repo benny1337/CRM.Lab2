@@ -1,50 +1,57 @@
-html, body {  
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  background-color: #fff;
-  padding: 0px;
-  margin: 0px;
-  height: 100%;
+html, body {
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    background-color: #fff;
+    padding: 0px;
+    margin: 0px;
+    height: 100%;
 }
+
 a {
-  color: #00b7ff;
+    color: #00b7ff;
 }
-.menu-wrapper{
-    display:flex;
+
+.menu-wrapper {
+    display: flex;
     width: 100%;
     padding: 20px;
     border-bottom: 1px solid #ccc;
 }
-.menu-wrapper a{
-    margin-right: 100px;
-}
 
-.main{
+    .menu-wrapper a {
+        margin-right: 100px;
+    }
+
+.main {
     padding: 50px;
 }
-.content{
-  min-height: 100%;  
-  margin-bottom: -60px; 
-}
-.content:after {
-  content: "";
-  display: block;
-}
-.footer, .content:after {
-  height: 60px; 
+
+.content {
+    min-height: 100%;
+    margin-bottom: -60px;
 }
 
-.footer {  
-  background-color: #efefef;
-  text-align: center;
-  padding-top: 20px;
+    .content:after {
+        content: "";
+        display: block;
+    }
+
+    .footer, .content:after {
+        height: 60px;
+    }
+
+.footer {
+    background-color: #efefef;
+    text-align: center;
+    padding-top: 20px;
 }
-.product{   
+
+.product {
     font-family: Roboto,Helvetica,Arial,sans-serif;
-    cursor:pointer;
+    cursor: pointer;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
     display: -webkit-box;
     display: -ms-flexbox;
-    display: flex;    
+    display: flex;
     -webkit-box-orient: vertical;
     -webkit-box-direction: normal;
     -ms-flex-direction: column;
@@ -54,43 +61,81 @@ a {
     background: #fff;
     border-radius: .2rem;
     margin: 20px;
-    min-width: 200px;
-    max-width: 300px;
+    min-width: 400px;
+    max-width: 400px;
 }
-.product h5{
-    font-family: Roboto,Helvetica,Arial,sans-serif;
-    font-size: 1.4rem;
-    line-height: 2.4rem;
-    letter-spacing: 0;
-    font-weight: 500;
-    line-height: 1.4;
+.product .click{
+    padding-bottom: 70px;
+    border-bottom: 1px solid #ccc;
 }
-.product .image{
-    width:100%;
-}
-.product .image img{
-    width:100%;
-}
-.product .title{
-    padding: 1.6rem;
+
+    .product .productfooter {                
+        padding: 20px;
+        cursor:default;
+    }
+    .product .productfooter button {
+        float:right;
+    }
+
+        .product .productfooter .price {
+            color: #ea2425;
+            font-size: 25px;
+            line-height: 38px;
+            font-weight: 600;
+            font-family: "Open Sans",sans-serif;
+            -webkit-font-smoothing: antialiased;
+            cursor:default;
+        }
+
+    .product .attributeswrapper li {
+        font-weight: 500;
+        color: #757575;
+        font-size: 12pt;
+        letter-spacing: 0;
+    }
+
+    .product h5 {
+        font-family: Roboto,Helvetica,Arial,sans-serif;
+        font-size: 1.4rem;
+        line-height: 2.4rem;
+        letter-spacing: 0;
+        font-weight: 500;
+        line-height: 0.4;
+    }
+
+    .product .image {
+        width: 100%;
+        text-align: center;
+    }
+
+        .product .image img {
+            max-width: 100%;
+            max-height: 300px;
+        }
+
+    .product .title {
+        padding: 1.6rem;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+    }
+
+        .product .title p {
+            font-weight: 500;
+            line-height: 1.4;
+            color: #757575;
+            font-size: 10pt;
+            letter-spacing: 0;
+        }
+
+.productwrapper {
     display: flex;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-}
-.product .title p{
-    font-weight: 500;
-    line-height: 1.4;
-    color: #757575;
-    font-size: 10pt;
-    letter-spacing: 0;
-}
-.productwrapper{
-    display:flex;
     flex-direction: row;
-    align-items:flex-start;
+    align-items: flex-start;
 }
-.avatar{        
+
+.avatar {
     position: relative;
     display: inline-block;
     width: 4rem;
@@ -105,12 +150,13 @@ a {
     margin-right: 20px;
 }
 
-.avatar img{
-    display: block;
-    max-width: 100%;
-    height: auto;
-    background-color: transparent;
-    background-position: 50%;
-    background-size: cover;
-    border-radius: 50%;
-}
+    .avatar img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        max-height: 300px;
+        background-color: transparent;
+        background-position: 50%;
+        background-size: cover;
+        border-radius: 50%;
+    }

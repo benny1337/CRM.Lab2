@@ -9,6 +9,7 @@ var productSchema = mongoose.Schema({
     OtherImagesCSV: String,
     AttributesCSV: String,
     SeoName: String,
+    Subtitle: String,
 });
 
 module.exports = mongoose.model('Product', productSchema);

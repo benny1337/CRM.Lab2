@@ -29,6 +29,7 @@ export interface IProduct {
     OtherImagesCSV: string;
     AttributesCSV: string;
     SeoName: string;
+    Subtitle: string;
 }
 export interface IAction {
     type: string;

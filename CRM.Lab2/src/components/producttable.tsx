@@ -3,9 +3,12 @@ import * as Model from '../domain/model';
 import * as Actions from '../domain/actions';
 import { connect } from 'react-redux'
 import Spinner from './spinner';
+import { AttributesCSVDisplayer } from './attributescsvdisplayer';
 import { Link } from 'react-router';
 import 'whatwg-fetch';
 import { browserHistory } from 'react-router'
+import Masonry from 'react-masonry-component';
+
 
 interface IProps {
     isLoading: boolean;
@@ -18,6 +21,8 @@ class ProductTableDef extends React.Component<IProps, {}> {
 
     constructor(props: IProps) {
         super(props);
+
+        this.addToCart.bind(this);
     }
 
     componentDidMount() {
@@ -28,38 +33,50 @@ class ProductTableDef extends React.Component<IProps, {}> {
         browserHistory.push(url);
     }
 
+    addToCart(product: Model.IProduct) {
+        console.log(product.Name);
+    }
+
     render() {
         var self = this;
+
         return (
-            <div className="productwrapper">
+            <div>
                 <Spinner isLoading={self.props.isLoading} />
-                {self.props.products.map(function (product, index) {
-                    var url = "/product/" + product.SeoName;
-                    return (
-                        <div key={index} className="product" onClick={() => self.onnavigate(url)}>
-                            <div className="title">
-                                <div className="avatar">
-                                    <img src="https://d4n5pyzr6ibrc.cloudfront.net/media/27FB7F0C-9885-42A6-9E0C19C35242B5AC/D968A2D0-35B8-41C6-A94A0C5C5FCA0725/thul-43c319fb-cc3a-56b5-afdc-f3544a682986.jpg?response-content-disposition=inline" />
-                                </div>
-                                <div className="title-content">
-                                    <h5>{product.Name}</h5>
-                                    <p>
-                                        this is a subtitle
-                                </p>
-                                </div>
-                            </div>
+                <Masonry
+                    elementType={'ul'} // default 'div'
+                    disableImagesLoaded={false} // default false
+                    updateOnEachImageLoad={false} // default false and works only if disableImagesLoaded is false
+                    >
 
-                            <div className="image">
-                                <img src={product.ImgUrl} />
-                            </div>
+                    {self.props.products.map(function (product, index) {
+                        var url = "/product/" + product.SeoName;
+                        return (
+                            <li key={index} className="product">
+                                <div className="click" onClick={() => self.onnavigate(url)}>
+                                    <div className="image">
+                                        <img src={product.ImgUrl} />
+                                    </div>
 
-                            <div className="text">
-                                {product.Price}:-
-                                {product.Supplier}
-                            </div>
-                        </div>
-                    )
-                })}
+                                    <div className="title">
+                                        <div className="title-content">
+                                            <h5>{product.Name}</h5>
+                                            <p>
+                                                {product.Subtitle}
+                                            </p>
+                                        </div>                                        
+                                    </div>
+                                    <AttributesCSVDisplayer attributescsv={product.AttributesCSV} />
+                                </div>
+                                <div className="productfooter">
+                                    <span className="price">{product.Price}:-</span>
+                                    <button className="btn btn-primary" onClick={() => self.addToCart(product)}>Lägg i kundvagn</button>
+                                </div>
+
+                            </li>
+                        )
+                    })}
+                </Masonry>
             </div>
         )
     }

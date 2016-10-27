@@ -29,5 +29,6 @@ namespace CRM.Lab2.Models
         public string OtherImagesCSV { get; set; }
         public string AttributesCSV { get; set; }
         public string SeoName { get; set; }
+        public string Subtitle { get; set; }
     }
 }
