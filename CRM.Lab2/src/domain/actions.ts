@@ -1,6 +1,16 @@
 ﻿import * as Model from './model';
 import * as Service from './service';
 
+export const ASYNC_OPERATION_STARTED = "ASYNC_OPERATION_STARTED";
+export function ayncOpertationStarted(type: string) {
+    return { type: ASYNC_OPERATION_STARTED, isAsync: true, starttime: new Date().getTime(), payload: type } as Model.IAction
+} 
+
+export const ASYNC_OPERATION_ENDED = "ASYNC_OPERATION_ENDED";
+export function ayncOpertationEnded(type: string) {
+    return { type: ASYNC_OPERATION_ENDED, isAsync: true, endtime: new Date().getTime(), payload: type } as Model.IAction
+} 
+
 export const REQUESTING_USER = "REQUESTING_USER";
 export function requestingUser() {
     return { type: REQUESTING_USER, isAsync: true } as Model.IAction
@@ -13,12 +23,14 @@ export function recievedUser(u: Model.IUser) {
 
 export const START_RECIEVING_USER = "START_RECIEVING_USER";
 export function startRecievingUser() {
-    return function (dispatch: any) {        
+    return function (dispatch: any) {         
+        dispatch(ayncOpertationStarted("Fetching logged in user"));
         dispatch(requestingUser());
         let service = new Service.Service();
         return service.UserService.retrieveUser().then(function (user) {
             dispatch(recievedUser(user));
-        }).catch(function (error) { });
+            dispatch(ayncOpertationEnded("Fetching logged in user"));
+        }).catch(function (error) { dispatch(ayncOpertationEnded("Fetching logged in user")); });
     }
 }
 
@@ -35,11 +47,13 @@ export function recievedProducts(prods: Model.IProduct[]) {
 export const START_RECIEVING_PRODUCTS = "START_RECIEVING_PRODUCTS";
 export function startRecievingProducts() {
     return function (dispatch: any) {
+        dispatch(ayncOpertationStarted("Fetching all products"));
         dispatch(requestingProducts());
         let service = new Service.Service();
         return service.ProductService.retrieveProducts().then(function (products) {
             dispatch(recievedProducts(products));
-        }).catch(function (error) { });
+            dispatch(ayncOpertationEnded("Fetching all products"));
+        }).catch(function (error) { dispatch(ayncOpertationEnded("Fetching all products")); });
     }
 }
 
@@ -56,10 +70,12 @@ export function recievedProduct(prod: Model.IProduct) {
 export const START_RECIEVING_A_PRODUCT = "START_RECIEVING_A_PRODUCT";
 export function startRecievingProduct(seoname: string) {
     return function (dispatch: any) {
+        dispatch(ayncOpertationStarted("Fetching one product"));
         dispatch(requestingProduct());
         let service = new Service.Service();
         return service.ProductService.retrieveProduct(seoname).then(function (product) {
             dispatch(recievedProduct(product));
-        }).catch(function (error) { });
+            dispatch(ayncOpertationEnded("Fetching one product"));
+        }).catch(function (error) { dispatch(ayncOpertationEnded("Fetching one product")); });
     }
 }

@@ -64,18 +64,20 @@ a {
     min-width: 400px;
     max-width: 400px;
 }
-.product .click{
-    padding-bottom: 70px;
-    border-bottom: 1px solid #ccc;
-}
 
-    .product .productfooter {                
+    .product .click {
+        padding-bottom: 70px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .product .productfooter {
         padding: 20px;
-        cursor:default;
+        cursor: default;
     }
-    .product .productfooter button {
-        float:right;
-    }
+
+        .product .productfooter button {
+            float: right;
+        }
 
         .product .productfooter .price {
             color: #ea2425;
@@ -84,7 +86,7 @@ a {
             font-weight: 600;
             font-family: "Open Sans",sans-serif;
             -webkit-font-smoothing: antialiased;
-            cursor:default;
+            cursor: default;
         }
 
     .product .attributeswrapper li {
@@ -160,3 +162,13 @@ a {
         background-size: cover;
         border-radius: 50%;
     }
+
+
+.actionwrapper {
+    padding: 20px;
+    background-color: #076406
+}
+
+.actionwrapper .action {
+
+}

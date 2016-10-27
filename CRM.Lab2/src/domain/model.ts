@@ -36,5 +36,7 @@ export interface IAction {
     payload: any,
     isAsync: boolean,
     isSuccessful: boolean,
-    error: IError
+    error: IError,
+    starttime: number,
+    endtime: number
 }
