@@ -1,14 +1,25 @@
 ﻿import * as React from "react";
 import * as Model from '../domain/model';
 import * as Slider from 'react-slick';
-import * as Modal from 'react-modal';
 
 interface IProps {
-    csvimages: string
+    images: string[]
 }
 
 interface IState {
     openindex?: number
+}
+
+class LeftNavButton extends React.Component<{}, {}> {
+    render() {
+        return <button {...this.props}>Next</button>
+    }
+}
+
+class RightNavButton extends React.Component<{}, {}> {
+    render() {
+        return <button {...this.props}>Next</button>
+    }
 }
 
 export class ImageCSVSlider extends React.Component<IProps, IState> {
@@ -20,7 +31,7 @@ export class ImageCSVSlider extends React.Component<IProps, IState> {
         this.closeModal.bind(this);
     }
 
-    openModal(index: number) {        
+    openModal(index: number) {
         this.setState({ openindex: index });
     }
     closeModal() {
@@ -28,11 +39,10 @@ export class ImageCSVSlider extends React.Component<IProps, IState> {
     }
     render() {
 
-        if (!this.props.csvimages)
+        if (!this.props.images || this.props.images.length < 1)
             return null;
         var wrapperstyle = {
-            width: "200px",
-            border: "1px solid #ccc",
+            width: "600px",
             padding: "20px 20px 40px 20px",
             margin: "20px"
         };
@@ -47,6 +57,7 @@ export class ImageCSVSlider extends React.Component<IProps, IState> {
             slidesToScroll: 1,
             autoplay: true,
             pauseOnHover: true,
+            adaptiveHeight: true      
         };
         var modalstyle = {
             overlay: {
@@ -55,36 +66,32 @@ export class ImageCSVSlider extends React.Component<IProps, IState> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: 'rgba(53, 53, 53, 0.75)'          
+                backgroundColor: 'rgba(53, 53, 53, 0.75)'
             },
             content: {
                 top: '50%',
                 left: '50%',
                 right: 'auto',
                 bottom: 'auto',
-                
+
                 transform: 'translate(-50%, -50%)'
             }
         }
         var self = this;
-        return (            
-            <div style={wrapperstyle}>
-                <Slider {...settings}>
-                    {this.props.csvimages.split(",").map(function (img, index) {
-                        var isopen = self.state ? self.state.openindex == index : false;              
-                        return (
-                            <div onClick={() => self.openModal(index)} style={itemstyle} key={index}><img src={img} height="150" />
-                                <Modal
-                                    style={modalstyle}
-                                    isOpen={isopen}
-                                    onRequestClose={self.closeModal.bind(self)}>
-                                    <img src={img} />
-                                </Modal>
-                            </div>
-                        )
-                    })}
-                </Slider>
-            </div>
-        );
+        return (
+            <div style={wrapperstyle} >
+                <div>
+                    <Slider {...settings}>
+                        {this.props.images.map(function (img, index) {
+                            var isopen = self.state ? self.state.openindex == index : false;
+                            return (
+                                <div onClick={() => self.openModal(index)} style={itemstyle} key={index}>
+                                    <img src={img} className="carouselimg" />
+                                </div>
+                            )
+                        })}
+                    </Slider>
+                </div>
+            </div>);
     }
 }

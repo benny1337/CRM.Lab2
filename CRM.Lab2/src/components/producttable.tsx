@@ -3,6 +3,8 @@ import * as Model from '../domain/model';
 import * as Actions from '../domain/actions';
 import { connect } from 'react-redux'
 import Spinner from './spinner';
+import { AddToCartButton } from './addtocartbutton';
+import { AddToCartDialogue } from './addtocartdialogue';
 import { AttributesCSVDisplayer } from './attributescsvdisplayer';
 import { Link } from 'react-router';
 import 'whatwg-fetch';
@@ -14,19 +16,27 @@ interface IProps {
     isLoading: boolean;
     products: Model.IProduct[];
     loadProducts: () => void;
+    productWasAddedToCart: (prod: Model.IProduct) => void;
 }
 
+interface IState {   
+    product?: Model.IProduct
+}
 
-class ProductTableDef extends React.Component<IProps, {}> {
+class ProductTableDef extends React.Component<IProps, IState> {
 
     constructor(props: IProps) {
         super(props);
 
         this.addToCart.bind(this);
+        this.requestCloseFn.bind(this);        
     }
 
     componentDidMount() {
         this.props.loadProducts();
+        this.setState({
+            product: null
+        })
     }
 
     onnavigate(url: string) {
@@ -34,15 +44,34 @@ class ProductTableDef extends React.Component<IProps, {}> {
     }
 
     addToCart(product: Model.IProduct) {
-        console.log(product.Name);
+        this.setState({
+            product: product,
+        });
+    }
+
+    okWasPressed(prod: Model.IProduct) {
+        this.props.productWasAddedToCart(prod);
+        this.setState({
+            product: null,
+        });
+    }
+
+    requestCloseFn() {
+        this.setState({ product: null });
     }
 
     render() {
         var self = this;
 
+        if (!self.state)
+            return null;
+
+        
         return (
             <div>
                 <Spinner isLoading={self.props.isLoading} />
+                <AddToCartDialogue product={self.state.product} productWasAdded={self.okWasPressed.bind(self)} cancel={self.requestCloseFn.bind(self)} />
+                
                 <Masonry
                     elementType={'ul'} // default 'div'
                     disableImagesLoaded={false} // default false
@@ -70,7 +99,7 @@ class ProductTableDef extends React.Component<IProps, {}> {
                                 </div>
                                 <div className="productfooter">
                                     <span className="price">{product.Price}:-</span>
-                                    <button className="btn btn-primary" onClick={() => self.addToCart(product)}>Lägg i kundvagn</button>
+                                    <AddToCartButton product={product} addProduct={self.addToCart.bind(self)} />                                    
                                 </div>
 
                             </li>
@@ -93,6 +122,9 @@ const mapDispatchToProps = (dispatch: any) => {
         loadProducts: () => {
             dispatch(Actions.startRecievingProducts());
         },
+        productWasAddedToCart: (prod: Model.IProduct) => {
+            console.log("dispatching prod was added: " + prod.Name);
+        }
     }
 }
 const ProductTable = connect(

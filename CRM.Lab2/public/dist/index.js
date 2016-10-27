@@ -29408,6 +29408,8 @@
 	const Actions = __webpack_require__(258);
 	const react_redux_1 = __webpack_require__(250);
 	const spinner_1 = __webpack_require__(265);
+	const addtocartbutton_1 = __webpack_require__(343);
+	const addtocartdialogue_1 = __webpack_require__(344);
 	const attributescsvdisplayer_1 = __webpack_require__(341);
 	__webpack_require__(260);
 	const react_router_1 = __webpack_require__(172);
@@ -29416,20 +29418,38 @@
 	    constructor(props) {
 	        super(props);
 	        this.addToCart.bind(this);
+	        this.requestCloseFn.bind(this);
 	    }
 	    componentDidMount() {
 	        this.props.loadProducts();
+	        this.setState({
+	            product: null
+	        });
 	    }
 	    onnavigate(url) {
 	        react_router_1.browserHistory.push(url);
 	    }
 	    addToCart(product) {
-	        console.log(product.Name);
+	        this.setState({
+	            product: product,
+	        });
+	    }
+	    okWasPressed(prod) {
+	        this.props.productWasAddedToCart(prod);
+	        this.setState({
+	            product: null,
+	        });
+	    }
+	    requestCloseFn() {
+	        this.setState({ product: null });
 	    }
 	    render() {
 	        var self = this;
+	        if (!self.state)
+	            return null;
 	        return (React.createElement("div", null, 
 	            React.createElement(spinner_1.default, {isLoading: self.props.isLoading}), 
+	            React.createElement(addtocartdialogue_1.AddToCartDialogue, {product: self.state.product, productWasAdded: self.okWasPressed.bind(self), cancel: self.requestCloseFn.bind(self)}), 
 	            React.createElement(react_masonry_component_1.default, {elementType: 'ul', disableImagesLoaded: false, updateOnEachImageLoad: false}, self.props.products.map(function (product, index) {
 	                var url = "/product/" + product.SeoName;
 	                return (React.createElement("li", {key: index, className: "product"}, 
@@ -29447,7 +29467,7 @@
 	                        React.createElement("span", {className: "price"}, 
 	                            product.Price, 
 	                            ":-"), 
-	                        React.createElement("button", {className: "btn btn-primary", onClick: () => self.addToCart(product)}, "Lägg i kundvagn"))));
+	                        React.createElement(addtocartbutton_1.AddToCartButton, {product: product, addProduct: self.addToCart.bind(self)}))));
 	            }))));
 	    }
 	}
@@ -29462,6 +29482,9 @@
 	        loadProducts: () => {
 	            dispatch(Actions.startRecievingProducts());
 	        },
+	        productWasAddedToCart: (prod) => {
+	            console.log("dispatching prod was added: " + prod.Name);
+	        }
 	    };
 	};
 	const ProductTable = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(ProductTableDef);
@@ -29479,6 +29502,9 @@
 	const react_redux_1 = __webpack_require__(250);
 	//import * as Enumerable from "linq";
 	const imagecsvslider_1 = __webpack_require__(290);
+	const attributescsvdisplayer_1 = __webpack_require__(341);
+	const addtocartbutton_1 = __webpack_require__(343);
+	const addtocartdialogue_1 = __webpack_require__(344);
 	class ProductDetailDef extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -29486,14 +29512,53 @@
 	    componentDidMount() {
 	        var productname = this.props.params.productname;
 	        this.props.loadProduct(productname);
+	        this.setState({
+	            addToCartProduct: null
+	        });
+	    }
+	    addToCart() {
+	        var self = this;
+	        this.setState({
+	            addToCartProduct: self.props.product
+	        });
+	    }
+	    okWasPressed() {
+	        this.props.productWasAddedToCart(this.props.product);
+	        this.setState({
+	            addToCartProduct: null,
+	        });
+	    }
+	    cancelWasPressed() {
+	        console.log("cancel add to cart");
+	        this.setState({
+	            addToCartProduct: null
+	        });
 	    }
 	    render() {
-	        if (!this.props.product)
+	        if (!this.props.product || !this.state)
 	            return null;
-	        return (React.createElement("div", null, 
-	            this.props.product.Name, 
-	            React.createElement("img", {src: this.props.product.ImgUrl}), 
-	            React.createElement(imagecsvslider_1.ImageCSVSlider, {csvimages: this.props.product.OtherImagesCSV})));
+	        var images = [this.props.product.ImgUrl];
+	        if (this.props.product.OtherImagesCSV)
+	            images = images.concat(this.props.product.OtherImagesCSV.split(','));
+	        return (React.createElement("div", {className: "productdetailwrapper"}, 
+	            React.createElement(addtocartdialogue_1.AddToCartDialogue, {product: this.state.addToCartProduct, productWasAdded: this.okWasPressed.bind(this), cancel: this.cancelWasPressed.bind(this)}), 
+	            React.createElement("div", null, 
+	                React.createElement("h2", null, this.props.product.Name), 
+	                React.createElement("p", null, this.props.product.Subtitle), 
+	                React.createElement("p", null, this.props.product.Text), 
+	                React.createElement(attributescsvdisplayer_1.AttributesCSVDisplayer, {attributescsv: this.props.product.AttributesCSV})), 
+	            React.createElement("div", null, 
+	                React.createElement(imagecsvslider_1.ImageCSVSlider, {images: images})
+	            ), 
+	            React.createElement("div", {className: "productdetailactions"}, 
+	                React.createElement("div", null, 
+	                    "Fynda nu, endast", 
+	                    React.createElement("br", null), 
+	                    React.createElement("span", {className: "price"}, 
+	                        this.props.product.Price, 
+	                        ":-"), 
+	                    React.createElement(addtocartbutton_1.AddToCartButton, {product: this.props.product, addProduct: this.addToCart.bind(this)}))
+	            )));
 	    }
 	}
 	const mapStateToProps = (state) => {
@@ -29506,6 +29571,9 @@
 	        loadProduct: (seoname) => {
 	            dispatch(Actions.startRecievingProduct(seoname));
 	        },
+	        productWasAddedToCart: (prod) => {
+	            console.log("dispatching prod was added: " + prod.Name);
+	        }
 	    };
 	};
 	const ProductDetail = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(ProductDetailDef);
@@ -34825,7 +34893,16 @@
 	};
 	const React = __webpack_require__(1);
 	const Slider = __webpack_require__(273);
-	const Modal = __webpack_require__(292);
+	class LeftNavButton extends React.Component {
+	    render() {
+	        return React.createElement("button", __assign({}, this.props), "Next");
+	    }
+	}
+	class RightNavButton extends React.Component {
+	    render() {
+	        return React.createElement("button", __assign({}, this.props), "Next");
+	    }
+	}
 	class ImageCSVSlider extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -34839,11 +34916,10 @@
 	        this.setState({ openindex: null });
 	    }
 	    render() {
-	        if (!this.props.csvimages)
+	        if (!this.props.images || this.props.images.length < 1)
 	            return null;
 	        var wrapperstyle = {
-	            width: "200px",
-	            border: "1px solid #ccc",
+	            width: "600px",
 	            padding: "20px 20px 40px 20px",
 	            margin: "20px"
 	        };
@@ -34858,6 +34934,7 @@
 	            slidesToScroll: 1,
 	            autoplay: true,
 	            pauseOnHover: true,
+	            adaptiveHeight: true
 	        };
 	        var modalstyle = {
 	            overlay: {
@@ -34878,14 +34955,14 @@
 	        };
 	        var self = this;
 	        return (React.createElement("div", {style: wrapperstyle}, 
-	            React.createElement(Slider, __assign({}, settings), this.props.csvimages.split(",").map(function (img, index) {
-	                var isopen = self.state ? self.state.openindex == index : false;
-	                return (React.createElement("div", {onClick: () => self.openModal(index), style: itemstyle, key: index}, 
-	                    React.createElement("img", {src: img, height: "150"}), 
-	                    React.createElement(Modal, {style: modalstyle, isOpen: isopen, onRequestClose: self.closeModal.bind(self)}, 
-	                        React.createElement("img", {src: img})
-	                    )));
-	            }))
+	            React.createElement("div", null, 
+	                React.createElement(Slider, __assign({}, settings), this.props.images.map(function (img, index) {
+	                    var isopen = self.state ? self.state.openindex == index : false;
+	                    return (React.createElement("div", {onClick: () => self.openModal(index), style: itemstyle, key: index}, 
+	                        React.createElement("img", {src: img, className: "carouselimg"})
+	                    ));
+	                }))
+	            )
 	        ));
 	    }
 	}
@@ -42338,6 +42415,84 @@
 	    }
 	}
 	exports.AttributesCSVDisplayer = AttributesCSVDisplayer;
+
+
+/***/ },
+/* 342 */,
+/* 343 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	class AddToCartButton extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    render() {
+	        return (React.createElement("button", {className: "btn btn-primary", onClick: () => this.props.addProduct(this.props.product)}, "Lägg i kundvagn"));
+	    }
+	}
+	exports.AddToCartButton = AddToCartButton;
+
+
+/***/ },
+/* 344 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const Modal = __webpack_require__(292);
+	class AddToCartDialogue extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    render() {
+	        if (!this.props.product)
+	            return null;
+	        var modalstyle = {
+	            overlay: {
+	                position: 'fixed',
+	                top: 0,
+	                left: 0,
+	                right: 0,
+	                bottom: 0,
+	                backgroundColor: 'rgba(53, 53, 53, 0.75)'
+	            },
+	            content: {
+	                top: '50%',
+	                left: '50%',
+	                right: 'auto',
+	                bottom: 'auto',
+	                marginRight: '-50%',
+	                transform: 'translate(-50%, -50%)'
+	            }
+	        };
+	        var inputstyle = {
+	            maxWidth: "200px"
+	        };
+	        return (React.createElement("div", null, 
+	            React.createElement(Modal, {isOpen: this.props.product != null, onRequestClose: this.props.cancel, style: modalstyle}, 
+	                React.createElement("div", null, 
+	                    React.createElement("div", {className: "title"}, 
+	                        React.createElement("div", {className: "title-content"}, 
+	                            React.createElement("h5", null, this.props.product.Name), 
+	                            React.createElement("p", null, this.props.product.Subtitle))
+	                    ), 
+	                    React.createElement("p", null, 
+	                        "Lägga denna produkt i varukorgen för ", 
+	                        this.props.product.Price, 
+	                        "kr?"), 
+	                    React.createElement("div", {className: "input-group", style: inputstyle}, 
+	                        React.createElement("span", {className: "input-group-addon"}, "st"), 
+	                        React.createElement("input", {type: "text", className: "form-control", placeholder: "Antal"})), 
+	                    React.createElement("div", {className: "addtocartfooter"}, 
+	                        React.createElement("button", {className: "btn btn-warning", onClick: () => { this.props.cancel(); }}, "Avbryt"), 
+	                        React.createElement("button", {className: "btn btn-success", onClick: () => { this.props.productWasAdded(this.props.product); }}, "Ok")))
+	            )
+	        ));
+	    }
+	}
+	exports.AddToCartDialogue = AddToCartDialogue;
 
 
 /***/ }

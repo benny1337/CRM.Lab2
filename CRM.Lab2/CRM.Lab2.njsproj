@@ -72,6 +72,8 @@
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="src\components\addToCartDialogue.tsx" />
+    <Content Include="src\components\addToCartButton.tsx" />
     <Content Include="src\components\AttributesCSVDisplayer.tsx" />
     <Content Include="src\components\imagewithmodal.tsx" />
     <Content Include="src\components\ImageCSVSlider.tsx" />
