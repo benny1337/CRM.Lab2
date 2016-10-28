@@ -16,7 +16,7 @@ interface IProps {
     isLoading: boolean;
     products: Model.IProduct[];
     loadProducts: () => void;
-    productWasAddedToCart: (prod: Model.IProduct) => void;
+    productWasAddedToCart: (row: Model.IOrderRow) => void;
 }
 
 interface IState {   
@@ -49,8 +49,8 @@ class ProductTableDef extends React.Component<IProps, IState> {
         });
     }
 
-    okWasPressed(prod: Model.IProduct) {
-        this.props.productWasAddedToCart(prod);
+    okWasPressed(row: Model.IOrderRow) {
+        this.props.productWasAddedToCart(row);
         this.setState({
             product: null,
         });
@@ -122,8 +122,8 @@ const mapDispatchToProps = (dispatch: any) => {
         loadProducts: () => {
             dispatch(Actions.startRecievingProducts());
         },
-        productWasAddedToCart: (prod: Model.IProduct) => {
-            console.log("dispatching prod was added: " + prod.Name);
+        productWasAddedToCart: (row: Model.IOrderRow) => {
+            dispatch(Actions.productWasAddedToCart(row));
         }
     }
 }

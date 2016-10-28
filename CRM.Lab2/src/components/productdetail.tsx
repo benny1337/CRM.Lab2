@@ -11,7 +11,7 @@ import { AddToCartDialogue } from './addtocartdialogue';
 interface IProps {
     loadProduct(seoname: string): () => void;
     product: Model.IProduct;
-    productWasAddedToCart: (prod: Model.IProduct) => void;
+    productWasAddedToCart: (row: Model.IOrderRow) => void;
 }
 interface IState {
     addToCartProduct?: Model.IProduct
@@ -37,8 +37,8 @@ class ProductDetailDef extends React.Component<IProps, IState> {
         });
     }
 
-    okWasPressed() {
-        this.props.productWasAddedToCart(this.props.product);
+    okWasPressed(row: Model.IOrderRow) {
+        this.props.productWasAddedToCart(row);
         this.setState({
             addToCartProduct: null,
         });
@@ -99,8 +99,8 @@ const mapDispatchToProps = (dispatch: any) => {
         loadProduct: (seoname: string) => {
             dispatch(Actions.startRecievingProduct(seoname));
         },
-        productWasAddedToCart: (prod: Model.IProduct) => {
-            console.log("dispatching prod was added: " + prod.Name);
+        productWasAddedToCart: (row: Model.IOrderRow) => {
+            dispatch(Actions.productWasAddedToCart(row));
         }
     }
 }

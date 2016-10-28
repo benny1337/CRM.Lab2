@@ -35,11 +35,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.js" />
+    <Compile Include="app\models\orderrow.js" />
+    <Compile Include="app\models\order.js" />
     <Compile Include="app\models\product.js" />
     <Compile Include="app\models\user.js" />
     <Compile Include="config\auth.js" />
     <Compile Include="config\database.js" />
     <Compile Include="config\passport.js" />
+    <Compile Include="config\orders.js" />
     <Compile Include="config\products.js" />
     <Compile Include="node_modules\react-masonry-component\lib\index.js" />
     <Compile Include="node_modules\react-masonry-component\node_modules\lodash.assign\index.js" />
@@ -72,6 +75,7 @@
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="src\components\cart.tsx" />
     <Content Include="src\components\addToCartDialogue.tsx" />
     <Content Include="src\components\addToCartButton.tsx" />
     <Content Include="src\components\AttributesCSVDisplayer.tsx" />
@@ -102,6 +106,7 @@
     <Folder Include="bin\" />
     <Folder Include="config\" />
     <Folder Include="dist\" />
+    <Folder Include="node_modules\" />
     <Folder Include="node_modules\react-masonry-component\" />
     <Folder Include="node_modules\react-masonry-component\.idea\" />
     <Folder Include="node_modules\react-masonry-component\.idea\copyright\" />

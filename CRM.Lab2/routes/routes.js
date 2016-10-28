@@ -4,6 +4,11 @@ var passport = require('../config/passport');
 var products = require('../config/products');
 
 
+router.post("/orders", function (req, res) {
+    debugger;
+    res.send({ status: 'SUCCESS' });
+});
+
 router.get('/', function (req, res) {
     res.render('index', { header: '' });
 });

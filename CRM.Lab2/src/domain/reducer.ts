@@ -3,12 +3,15 @@ import * as Model from './model';
 import * as Actions from './actions';
 import * as Enumerable from "linq"
 
+const STOREKEY = "cart";
+
 interface IState {
     user: Model.IUser;
     products: Model.IProduct[];
     currentProduct: Model.IProduct;
     isLoading: boolean;
-    asyncactions: Model.IAction[]
+    asyncactions: Model.IAction[];
+    cart: Model.IOrderRow[];
 }
 
 function appstate(state = {
@@ -16,7 +19,8 @@ function appstate(state = {
     isLoading: false,
     currentProduct: null,
     products: [],
-    asyncactions: []
+    asyncactions: [],
+    cart: localStorage.getItem(STOREKEY) !== "undefined" ? JSON.parse(localStorage.getItem(STOREKEY)) as Model.IOrderRow[]: [],
 } as IState, action: Model.IAction) {
 
     switch (action.type) {
@@ -40,6 +44,20 @@ function appstate(state = {
                 return (<any>Object).assign({}, state);
             }
         }
+        case Actions.PRODUCT_WAS_REMOVED_FROM_CART:
+            var items = state.cart.filter(function (row) {
+                return row != action.payload
+            });
+            localStorage.setItem(STOREKEY, JSON.stringify(items));
+            return (<any>Object).assign({}, state, {
+                cart: items
+            });
+        case Actions.PRODUCT_WAS_ADDED_TO_CART:
+            var cart = [...state.cart, action.payload];            
+            localStorage.setItem(STOREKEY, JSON.stringify(cart));
+            return (<any>Object).assign({}, state, {
+                cart: cart,
+            });
         case Actions.REQUESTING_USER:
             return (<any>Object).assign({}, state, {
                 isLoading: true,                

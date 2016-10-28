@@ -1,6 +1,21 @@
 ﻿import 'whatwg-fetch';
 import * as Model from './model';
 
+class OrderService {
+    saveOrder(order: Model.IOrder) {
+        return new Promise((resolve, reject) => {
+            fetch('/orders', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(order)
+            }).then(function (resp) { resolve(); }).catch(function (err) { reject(err); });
+        });
+    }
+}
+
 class ProductService {
     retrieveProducts() {
         return new Promise<Model.IProduct[]>((resolve, reject) => {
@@ -55,4 +70,5 @@ class UserService {
 export class Service {
     UserService = new UserService();
     ProductService = new ProductService();
+    OrderService = new OrderService();
 }

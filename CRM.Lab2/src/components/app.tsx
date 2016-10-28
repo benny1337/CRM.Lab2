@@ -5,12 +5,14 @@ import { Link } from 'react-router';
 import { connect } from 'react-redux'
 import { LoginOptions } from './loginoptions';
 import Spinner from './spinner';
+import Cart from './cart';
 
 interface IProps {
     initLoadUser: () => void;
     isLoading: boolean;
     asyncactions: Model.IAction[];
     user: Model.IUser;
+    cart: Model.IOrderRow[];
 }
 
 
@@ -33,6 +35,7 @@ class AppDef extends React.Component<IProps, {}> {
                     <Link to="/about">Om</Link>
 
                     <Spinner isLoading={this.props.isLoading} />{self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" : <LoginOptions />}
+                    <Cart />
                 </div>
                 <div>
                     {this.props.children}
@@ -57,7 +60,8 @@ const mapStateToProps = (state: any) => {
     return {
         user: state.appstate.user,
         isLoading: state.appstate.isLoading,
-        asyncactions: state.appstate.asyncactions
+        asyncactions: state.appstate.asyncactions,
+        cart: state.appstate.cart
     }
 }
 

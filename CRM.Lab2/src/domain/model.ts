@@ -31,6 +31,22 @@ export interface IProduct {
     SeoName: string;
     Subtitle: string;
 }
+export interface IOrder {
+    UserId: string;
+    OrderRows: IOrderRow[];
+    Date: Date;
+    Status: OrderState
+}
+export enum OrderState {
+    Pending = 0,
+    Placed = 1,
+    Done = 2
+}
+export interface IOrderRow {
+    Order: IOrder,
+    Product: IProduct,
+    Count: number
+}
 export interface IAction {
     type: string;
     payload: any,

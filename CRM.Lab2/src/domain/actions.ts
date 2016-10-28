@@ -9,7 +9,33 @@ export function ayncOpertationStarted(type: string) {
 export const ASYNC_OPERATION_ENDED = "ASYNC_OPERATION_ENDED";
 export function ayncOpertationEnded(type: string) {
     return { type: ASYNC_OPERATION_ENDED, isAsync: true, endtime: new Date().getTime(), payload: type } as Model.IAction
+}
+
+export const PRODUCT_WAS_ADDED_TO_CART = "PRODUCT_WAS_ADDED_TO_CART";
+export function productWasAddedToCart(row: Model.IOrderRow) {
+    return { type: PRODUCT_WAS_ADDED_TO_CART, isAsync: true, payload: row } as Model.IAction
 } 
+
+export const PRODUCT_WAS_REMOVED_FROM_CART = "PRODUCT_WAS_REMOVED_FROM_CART";
+export function productWasRemovedFromCart(row: Model.IOrderRow) {
+    return { type: PRODUCT_WAS_REMOVED_FROM_CART, isAsync: true, payload: row } as Model.IAction
+} 
+
+export const ORDER_WAS_PLACED = "ORDER_WAS_PLACED";
+export function orderWasPlaced(order: Model.IOrder) {
+    return { type: ORDER_WAS_PLACED, isAsync: true, payload: order } as Model.IAction
+}
+export const START_PLACING_ORDER = "START_PLACING_ORDER";
+export function startPlaceingOrder(order: Model.IOrder) {
+    return function (dispatch: any) {
+        dispatch(ayncOpertationStarted("Saving order"));        
+        let service = new Service.Service();
+        return service.OrderService.saveOrder(order).then(function () {
+            dispatch(orderWasPlaced(order));
+            dispatch(ayncOpertationEnded("Saving order"));
+        }).catch(function (error) { dispatch(ayncOpertationEnded("Saving order")); });
+    }
+}
 
 export const REQUESTING_USER = "REQUESTING_USER";
 export function requestingUser() {

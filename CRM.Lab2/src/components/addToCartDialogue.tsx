@@ -4,7 +4,7 @@ import * as Modal from 'react-modal';
 
 interface IProps {
     product: Model.IProduct;
-    productWasAdded: (prod: Model.IProduct) => void;
+    productWasAdded: (prod: Model.IOrderRow) => void;
     cancel: () => void;
 }
 
@@ -12,8 +12,17 @@ export class AddToCartDialogue extends React.Component<IProps, {}> {
 
     constructor(props: IProps) {
         super(props);
+
+        this.okWasPressed.bind(this);
     }
 
+    okWasPressed() {
+        var order = {
+            Product: this.props.product,
+            Count: 1
+        } as Model.IOrderRow;
+        this.props.productWasAdded(order);
+    }
 
     render() {
         if (!this.props.product)
@@ -65,8 +74,8 @@ export class AddToCartDialogue extends React.Component<IProps, {}> {
                         </div>
 
                         <div className="addtocartfooter">
-                            <button className="btn btn-warning" onClick={() => { this.props.cancel(); } }>Avbryt</button>
-                            <button className="btn btn-success" onClick={() => { this.props.productWasAdded(this.props.product); } }>Ok</button>
+                            <button className="btn btn-success" onClick={() => { this.okWasPressed() } }>Ok</button>
+                            <button className="btn btn-warning" onClick={() => { this.props.cancel(); } }>Avbryt</button>                            
                         </div>
                     </div>
 
