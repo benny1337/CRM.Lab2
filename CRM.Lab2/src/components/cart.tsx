@@ -2,8 +2,11 @@
 import * as Model from '../domain/model';
 import { connect } from 'react-redux'
 import * as Actions from '../domain/actions';
+import { Motion, spring } from 'react-motion';
+
 
 interface IProps {
+    cartIsVisible: boolean;
     cart: Model.IOrderRow[];
     removeRowWasPressed: (row: Model.IOrderRow) => void;
 }
@@ -22,23 +25,36 @@ class CartDef extends React.Component<IProps, {}> {
 
     render() {
         var self = this;
+        
         return (
-            <div>
-                <ul>
-                    {this.props.cart.map(function (row, index) {
-                        return (
-                            <li key={index}>{row.Product.Name} <button onClick={() => { self.removeWasPressed(row); } }>x</button></li>
-                        )
-                    })}
-                </ul>
-            </div>
+            <Motion style={{
+                x: spring(this.props.cartIsVisible ? 0 : -400, { stiffness: 120, damping: 17, precision:100 })
+            }}>
+                {({x}: any) =>
+                    <div className="cartmenu" style={{
+                        right: x
+                    }}>
+                        <div style={{padding: "20px"}}>
+                        <h2>Kundvagn</h2>
+                        {this.props.cart.map(function (row, index) {
+                                return (
+                                    <div className="item" key={index}>{row.Count}st: {row.Product.Name} <button onClick={() => { self.removeWasPressed(row); } }>x</button></div>
+                            )
+                        })}
+
+                        {this.props.cart.length < 1 ? <h5>Du har inte valt något</h5> : <button className="checkout">Gå till kassan</button>}
+                        </div>
+                    </div>
+                }
+            </Motion>
         )
     }
 }
 
 const mapStateToProps = (state: any) => {
     return {
-        cart: state.appstate.cart        
+        cart: state.appstate.cart,
+        cartIsVisible: state.appstate.cartIsVisible
     }
 }
 
@@ -47,7 +63,7 @@ const mapDispatchToProps = (dispatch: any) => {
         removeRowWasPressed: (row: Model.IOrderRow) => {
             dispatch(Actions.productWasRemovedFromCart(row));
         },
-        
+
     }
 }
 const Cart = connect(

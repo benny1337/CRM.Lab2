@@ -75,6 +75,7 @@
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="src\components\cartbutton.tsx" />
     <Content Include="src\components\cart.tsx" />
     <Content Include="src\components\addToCartDialogue.tsx" />
     <Content Include="src\components\addToCartButton.tsx" />

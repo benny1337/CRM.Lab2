@@ -6,6 +6,7 @@ import { connect } from 'react-redux'
 import { LoginOptions } from './loginoptions';
 import Spinner from './spinner';
 import Cart from './cart';
+import CartButton from './cartbutton';
 
 interface IProps {
     initLoadUser: () => void;
@@ -29,13 +30,14 @@ class AppDef extends React.Component<IProps, {}> {
         var self = this;
         return (
             <div>
+                <Cart />
                 <div className="menu-wrapper">
                     <Link to="/">Produkter</Link>
                     <Link to="/profile">Mina Sidor</Link>
                     <Link to="/about">Om</Link>
 
-                    <Spinner isLoading={this.props.isLoading} />{self.props.user ? "Hej " + self.props.user.facebook.name : self.props.isLoading ? "" : <LoginOptions />}
-                    <Cart />
+                    <Spinner isLoading={this.props.isLoading} />{self.props.user ? <span>"Hej " + self.props.user.facebook.name</span> : self.props.isLoading ? "" : <LoginOptions />}
+                    <CartButton />
                 </div>
                 <div>
                     {this.props.children}

@@ -12,6 +12,7 @@ interface IState {
     isLoading: boolean;
     asyncactions: Model.IAction[];
     cart: Model.IOrderRow[];
+    cartIsVisible: boolean;
 }
 
 function appstate(state = {
@@ -20,6 +21,7 @@ function appstate(state = {
     currentProduct: null,
     products: [],
     asyncactions: [],
+    cartIsVisible: false,
     cart: localStorage.getItem(STOREKEY) !== "undefined" ? JSON.parse(localStorage.getItem(STOREKEY)) as Model.IOrderRow[]: [],
 } as IState, action: Model.IAction) {
 
@@ -44,6 +46,10 @@ function appstate(state = {
                 return (<any>Object).assign({}, state);
             }
         }
+        case Actions.CART_WAS_TOGGLED:
+            return (<any>Object).assign({}, state, {
+                cartIsVisible: !state.cartIsVisible
+            });
         case Actions.PRODUCT_WAS_REMOVED_FROM_CART:
             var items = state.cart.filter(function (row) {
                 return row != action.payload

@@ -11,6 +11,11 @@ export function ayncOpertationEnded(type: string) {
     return { type: ASYNC_OPERATION_ENDED, isAsync: true, endtime: new Date().getTime(), payload: type } as Model.IAction
 }
 
+export const CART_WAS_TOGGLED = "CART_WAS_TOGGLED";
+export function cartWasToggled() {
+    return { type: CART_WAS_TOGGLED, isAsync: false } as Model.IAction
+}
+
 export const PRODUCT_WAS_ADDED_TO_CART = "PRODUCT_WAS_ADDED_TO_CART";
 export function productWasAddedToCart(row: Model.IOrderRow) {
     return { type: PRODUCT_WAS_ADDED_TO_CART, isAsync: true, payload: row } as Model.IAction

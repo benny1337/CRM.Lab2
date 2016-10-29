@@ -7,8 +7,11 @@ interface IProps {
     productWasAdded: (prod: Model.IOrderRow) => void;
     cancel: () => void;
 }
+interface IState {
+    count?: number
+}
 
-export class AddToCartDialogue extends React.Component<IProps, {}> {
+export class AddToCartDialogue extends React.Component<IProps, IState> {
 
     constructor(props: IProps) {
         super(props);
@@ -16,12 +19,22 @@ export class AddToCartDialogue extends React.Component<IProps, {}> {
         this.okWasPressed.bind(this);
     }
 
+    componentDidMount() {
+        this.setState({
+            count: 1
+        });
+    }
+
     okWasPressed() {
         var order = {
             Product: this.props.product,
-            Count: 1
+            Count: this.state.count
         } as Model.IOrderRow;
         this.props.productWasAdded(order);
+    }
+
+    countChanged(noofitems: number) {
+        this.setState({ count: noofitems })
     }
 
     render() {
@@ -70,7 +83,7 @@ export class AddToCartDialogue extends React.Component<IProps, {}> {
 
                         <div className="input-group" style={inputstyle}>
                             <span className="input-group-addon">st</span>
-                            <input type="text" className="form-control" placeholder="Antal" />
+                            <input type="text" className="form-control" placeholder="Antal" onChange={(e) => { this.countChanged((e.target as any).value) }} />
                         </div>
 
                         <div className="addtocartfooter">

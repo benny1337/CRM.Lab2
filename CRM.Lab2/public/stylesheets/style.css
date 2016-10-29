@@ -16,6 +16,9 @@ a {
     padding: 20px;
     border-bottom: 1px solid #ccc;
 }
+.menu-wrapper:last-child{
+    margin-left: auto;
+}
 
     .menu-wrapper a {
         margin-right: 100px;
@@ -188,12 +191,12 @@ a {
     cursor: default;
 }
 
-.productdetailactions div{
+.productdetailactions div {
     margin: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 20px;
-    font-family: Roboto,Helvetica,Arial,sans-serif;    
+    font-family: Roboto,Helvetica,Arial,sans-serif;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
     display: -webkit-box;
     display: -ms-flexbox;
@@ -201,15 +204,54 @@ a {
     -webkit-box-orient: vertical;
     -webkit-box-direction: normal;
     -ms-flex-direction: column;
-    flex-direction: column;    
+    flex-direction: column;
     font-size: 1.4rem;
     background: #fff;
-    border-radius: .2rem;    
-    min-width: 250px;    
+    border-radius: .2rem;
+    min-width: 250px;
 }
-.addtocartfooter{
+
+.addtocartfooter {
     display: flex;
     flex-direction: row;
     margin-top: 70px;
-    justify-content:space-between;
+    justify-content: space-between;
 }
+
+.cartmenu {
+    height: 100%; /* 100% Full-height */
+    width: 400px; /* 0 width - change this with JavaScript */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 0;
+    right: -400px;
+    opacity: 0.95;
+    background-color: #111; /* Black*/
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */    
+}
+
+    .cartmenu .item {
+        padding: 10px;
+        color: #ccc;
+        border-bottom: 1px solid #fff;
+        transition: 0.3s;
+    }
+
+    .cartmenu .checkout{
+        margin-top: 70px;
+    }
+
+        .cartmenu .item:hover {
+            background-color: #fff;
+            color: #302f2f;
+        }
+
+    .cartmenu h2 {
+        color: white;
+    }
+
+    .cartmenu h5 {
+        color: #efefef;
+    }
