@@ -1,6 +1,7 @@
 ﻿import * as Model from './model';
 import * as Service from './service';
 
+//async
 export const ASYNC_OPERATION_STARTED = "ASYNC_OPERATION_STARTED";
 export function ayncOpertationStarted(type: string) {
     return { type: ASYNC_OPERATION_STARTED, isAsync: true, starttime: new Date().getTime(), payload: type } as Model.IAction
@@ -11,6 +12,7 @@ export function ayncOpertationEnded(type: string) {
     return { type: ASYNC_OPERATION_ENDED, isAsync: true, endtime: new Date().getTime(), payload: type } as Model.IAction
 }
 
+//cart
 export const CART_WAS_TOGGLED = "CART_WAS_TOGGLED";
 export function cartWasToggled() {
     return { type: CART_WAS_TOGGLED, isAsync: false } as Model.IAction
@@ -31,6 +33,8 @@ export function cartWasEmptied() {
     return { type: CART_WAS_EMPTIED, isAsync: true } as Model.IAction
 } 
 
+
+//order
 export const ORDER_WAS_PLACED = "ORDER_WAS_PLACED";
 export function orderWasPlaced(order: Model.IOrder) {
     return { type: ORDER_WAS_PLACED, isAsync: true, payload: order } as Model.IAction
@@ -41,13 +45,14 @@ export function startPlaceingOrder(order: Model.IOrder) {
         dispatch(ayncOpertationStarted("Saving order"));        
         let service = new Service.Service();
         return service.OrderService.saveOrder(order).then(function () {
-            dispatch(orderWasPlaced(order));
             dispatch(cartWasEmptied());
+            dispatch(orderWasPlaced(order));            
             dispatch(ayncOpertationEnded("Saving order"));
         }).catch(function (error) { dispatch(ayncOpertationEnded("Saving order")); });
     }
 }
 
+//user
 export const REQUESTING_USER = "REQUESTING_USER";
 export function requestingUser() {
     return { type: REQUESTING_USER, isAsync: true } as Model.IAction
@@ -71,6 +76,8 @@ export function startRecievingUser() {
     }
 }
 
+
+//products
 export const REQUESTING_PRODUCTS = "REQUESTING_PRODUCTS";
 export function requestingProducts() {
     return { type: REQUESTING_PRODUCTS, isAsync: true } as Model.IAction

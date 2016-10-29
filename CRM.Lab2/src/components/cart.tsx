@@ -32,7 +32,8 @@ class CartDef extends React.Component<IProps, {}> {
 
     render() {
         var self = this;
-        
+        if (!self.props.cart)
+            return null;
         return (
             <Motion style={{
                 x: spring(this.props.cartIsVisible ? 0 : -400, { stiffness: 120, damping: 17, precision:100 })

@@ -10,6 +10,7 @@ interface IState {
     products: Model.IProduct[];
     currentProduct: Model.IProduct;
     isLoading: boolean;
+    placingOrder: boolean;
     asyncactions: Model.IAction[];
     cart: Model.IOrderRow[];
     cartIsVisible: boolean;
@@ -18,11 +19,12 @@ interface IState {
 function appstate(state = {
     user: null,
     isLoading: false,
+    placingOrder:false,
     currentProduct: null,
     products: [],
     asyncactions: [],
     cartIsVisible: false,
-    cart: localStorage.getItem(STOREKEY) !== "undefined" ? JSON.parse(localStorage.getItem(STOREKEY)) as Model.IOrderRow[]: [],
+    cart: (localStorage.getItem(STOREKEY) && localStorage.getItem(STOREKEY) !== "undefined") ? JSON.parse(localStorage.getItem(STOREKEY)) as Model.IOrderRow[]: [],
 } as IState, action: Model.IAction) {
 
     switch (action.type) {
@@ -46,6 +48,16 @@ function appstate(state = {
                 return (<any>Object).assign({}, state);
             }
         }
+        case Actions.START_PLACING_ORDER: {
+            return (<any>Object).assign({}, state, {
+                placingOrder: true
+            });
+        }
+        case Actions.ORDER_WAS_PLACED: {
+            return (<any>Object).assign({}, state, {
+                placingOrder: false
+            });
+        }
         case Actions.CART_WAS_TOGGLED:
             return (<any>Object).assign({}, state, {
                 cartIsVisible: !state.cartIsVisible
@@ -59,7 +71,7 @@ function appstate(state = {
                 cart: items
             });
         case Actions.CART_WAS_EMPTIED:
-            localStorage.setItem(STOREKEY, null);
+            localStorage.removeItem(STOREKEY);
             return (<any>Object).assign({}, state, {
                 cart: []
             });

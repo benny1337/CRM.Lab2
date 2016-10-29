@@ -4,16 +4,21 @@ import { connect } from 'react-redux'
 import * as Actions from '../domain/actions';
 import { LoginOptions } from './loginoptions';
 import { Money } from './money';
-
+import Spinner from './spinner';
 
 interface IProps {
     cart: Model.IOrderRow[];
     user: Model.IUser;
     removeRowWasPressed: (row: Model.IOrderRow) => void;
     startPlaceingOrder: (order: Model.IOrder) => void;
+    loading: boolean;
 }
 
-class CheckoutDef extends React.Component<IProps, {}> {
+interface IState {
+    orderwasplacedtext: string;
+}
+
+class CheckoutDef extends React.Component<IProps, IState> {
 
     constructor(props: IProps) {
         super(props);
@@ -35,7 +40,9 @@ class CheckoutDef extends React.Component<IProps, {}> {
             UserId: self.props.user.facebook.id
         } as Model.IOrder;
         self.props.startPlaceingOrder(o);
-        alert("Din order är sparad. Du kan se status för alla dina ordrar på 'mina sidor'");
+        self.setState({
+            orderwasplacedtext: "Din order är sparad. Du kan se status för alla dina ordrar på 'mina sidor'"
+        });
     }
 
     render() {
@@ -48,43 +55,61 @@ class CheckoutDef extends React.Component<IProps, {}> {
                     <LoginOptions />
                 </div>
             )
+
+        var info: any = (
+            <div className="alert alert-info" role="alert">
+                Vill du lägga en order med dessa items?
+            </div>);
+
+        if (this.state && this.state.orderwasplacedtext) {
+            info = (
+                <div className="alert alert-success" role="alert">
+                    {this.state.orderwasplacedtext}
+                </div>
+            );
+        }
+        var table = (
+            <table className="carttable">
+                <thead>
+                    <tr>
+                        <th>Produkt</th>
+                        <th>Pris/st</th>
+                        <th>Antal</th>
+                        <th>Totalt</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {this.props.cart.map(function (row, index) {
+                        var rowprice = row.Count * row.Product.Price;
+                        total += rowprice;
+                        return (
+                            <tr key={index}>
+                                <td>{row.Product.Name}</td>
+                                <td style={{ textAlign: "right" }}><Money money={row.Product.Price} /></td>
+                                <td style={{ textAlign: "right" }}>{row.Count}st</td>
+                                <td style={{ textAlign: "right" }}><Money money={rowprice} /></td>
+                                <td><button onClick={() => { self.removeRow(row); } }>x</button></td>
+                            </tr>
+                        )
+                    })}
+                    <tr>
+                        <td colSpan={3}></td>
+                        <td style={{ textAlign: "right" }}><Money money={total} /></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        );
         var total = 0;
         return (
-            
+
             <div>
-                <p>Vill du lägga en order med dessa items?:</p>
+                {info}
                 {user}
-                <table className="carttable">
-                    <thead>
-                        <tr>
-                            <th>Produkt</th>
-                            <th>Pris/st</th>
-                            <th>Antal</th>
-                            <th>Totalt</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.props.cart.map(function (row, index) {
-                            var rowprice = row.Count * row.Product.Price;
-                            total += rowprice;
-                            return (
-                                <tr key={index}>
-                                    <td>{row.Product.Name}</td>
-                                    <td style={{ textAlign: "right" }}><Money money={row.Product.Price} /></td>
-                                    <td style={{ textAlign: "right" }}>{row.Count} st</td>
-                                    <td style={{ textAlign: "right" }}><Money money={rowprice} /></td>
-                                    <td><button onClick={() => { self.removeRow(row); } }>x</button></td>
-                                </tr>
-                            )
-                        })}
-                        <tr>
-                            <td colSpan={3}></td>
-                            <td style={{ textAlign: "right" }}><Money money={total} /></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <Spinner isLoading={this.props.loading} />
+
+                {this.props.cart.length > 0 ? table : null}
 
                 {this.props.user ? (<button onClick={() => self.placeOrder()}>Lägg order</button>) : ""}
             </div>
@@ -95,7 +120,8 @@ class CheckoutDef extends React.Component<IProps, {}> {
 const mapStateToProps = (state: any) => {
     return {
         cart: state.appstate.cart,
-        user: state.appstate.user
+        user: state.appstate.user,
+        loading: state.appstate.placingOrder,
     }
 }
 

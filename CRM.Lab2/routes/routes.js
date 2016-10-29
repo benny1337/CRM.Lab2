@@ -10,6 +10,11 @@ router.post("/orders", orders.save, function (req, res) {
     res.send({ status: 'SUCCESS' });
 });
 
+router.get("/orders/all", isLoggedIn, orders.getAll, function (req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(res.orders));
+});
+
 router.get('/', function (req, res) {
     res.render('index', { header: '' });
 });

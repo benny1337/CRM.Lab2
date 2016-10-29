@@ -16,7 +16,7 @@ class CartButtonDef extends React.Component<IProps, {}> {
     }
 
     render() {
-        var showlabel = "Kundvagn (" + this.props.cart.length + ")";
+        var showlabel = "Kundvagn (" + (this.props.cart == null ? 0 : this.props.cart.length) + ")";
         return (
             <div style={{ float:"right" }}>
                 <button style={{ float: "right" }} className="btn btn-primary" onClick={() => { this.props.cartToggle() } }>{this.props.cartIsVisible ? "Dölj kundvagn" : showlabel}</button>

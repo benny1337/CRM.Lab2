@@ -1,8 +1,8 @@
 ﻿var mongoose = require('mongoose');
 
+
 var orderRowSchema = mongoose.Schema({
-    ProductId: String,
-    OrderId: String,
+    Product: { type: mongoose.Schema.Types.Object, ref: 'Product' },        
     Count: Number
 });
 

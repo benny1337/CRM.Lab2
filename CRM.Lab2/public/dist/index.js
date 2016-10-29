@@ -28586,11 +28586,12 @@
 	function appstate(state = {
 	        user: null,
 	        isLoading: false,
+	        placingOrder: false,
 	        currentProduct: null,
 	        products: [],
 	        asyncactions: [],
 	        cartIsVisible: false,
-	        cart: localStorage.getItem(STOREKEY) !== "undefined" ? JSON.parse(localStorage.getItem(STOREKEY)) : [],
+	        cart: (localStorage.getItem(STOREKEY) && localStorage.getItem(STOREKEY) !== "undefined") ? JSON.parse(localStorage.getItem(STOREKEY)) : [],
 	    }, action) {
 	    switch (action.type) {
 	        case Actions.ASYNC_OPERATION_STARTED: {
@@ -28614,6 +28615,16 @@
 	                return Object.assign({}, state);
 	            }
 	        }
+	        case Actions.START_PLACING_ORDER: {
+	            return Object.assign({}, state, {
+	                placingOrder: true
+	            });
+	        }
+	        case Actions.ORDER_WAS_PLACED: {
+	            return Object.assign({}, state, {
+	                placingOrder: false
+	            });
+	        }
 	        case Actions.CART_WAS_TOGGLED:
 	            return Object.assign({}, state, {
 	                cartIsVisible: !state.cartIsVisible
@@ -28627,7 +28638,7 @@
 	                cart: items
 	            });
 	        case Actions.CART_WAS_EMPTIED:
-	            localStorage.setItem(STOREKEY, null);
+	            localStorage.removeItem(STOREKEY);
 	            return Object.assign({}, state, {
 	                cart: []
 	            });
@@ -28681,6 +28692,7 @@
 
 	"use strict";
 	const Service = __webpack_require__(259);
+	//async
 	exports.ASYNC_OPERATION_STARTED = "ASYNC_OPERATION_STARTED";
 	function ayncOpertationStarted(type) {
 	    return { type: exports.ASYNC_OPERATION_STARTED, isAsync: true, starttime: new Date().getTime(), payload: type };
@@ -28691,6 +28703,7 @@
 	    return { type: exports.ASYNC_OPERATION_ENDED, isAsync: true, endtime: new Date().getTime(), payload: type };
 	}
 	exports.ayncOpertationEnded = ayncOpertationEnded;
+	//cart
 	exports.CART_WAS_TOGGLED = "CART_WAS_TOGGLED";
 	function cartWasToggled() {
 	    return { type: exports.CART_WAS_TOGGLED, isAsync: false };
@@ -28711,6 +28724,7 @@
 	    return { type: exports.CART_WAS_EMPTIED, isAsync: true };
 	}
 	exports.cartWasEmptied = cartWasEmptied;
+	//order
 	exports.ORDER_WAS_PLACED = "ORDER_WAS_PLACED";
 	function orderWasPlaced(order) {
 	    return { type: exports.ORDER_WAS_PLACED, isAsync: true, payload: order };
@@ -28722,13 +28736,14 @@
 	        dispatch(ayncOpertationStarted("Saving order"));
 	        let service = new Service.Service();
 	        return service.OrderService.saveOrder(order).then(function () {
-	            dispatch(orderWasPlaced(order));
 	            dispatch(cartWasEmptied());
+	            dispatch(orderWasPlaced(order));
 	            dispatch(ayncOpertationEnded("Saving order"));
 	        }).catch(function (error) { dispatch(ayncOpertationEnded("Saving order")); });
 	    };
 	}
 	exports.startPlaceingOrder = startPlaceingOrder;
+	//user
 	exports.REQUESTING_USER = "REQUESTING_USER";
 	function requestingUser() {
 	    return { type: exports.REQUESTING_USER, isAsync: true };
@@ -28752,6 +28767,7 @@
 	    };
 	}
 	exports.startRecievingUser = startRecievingUser;
+	//products
 	exports.REQUESTING_PRODUCTS = "REQUESTING_PRODUCTS";
 	function requestingProducts() {
 	    return { type: exports.REQUESTING_PRODUCTS, isAsync: true };
@@ -32547,6 +32563,8 @@
 	    }
 	    render() {
 	        var self = this;
+	        if (!self.props.cart)
+	            return null;
 	        return (React.createElement(react_motion_1.Motion, {style: {
 	            x: react_motion_1.spring(this.props.cartIsVisible ? 0 : -400, { stiffness: 120, damping: 17, precision: 100 })
 	        }}, ({ x }) => React.createElement("div", {className: "cartmenu", style: {
@@ -34066,7 +34084,7 @@
 	        super(props);
 	    }
 	    render() {
-	        var showlabel = "Kundvagn (" + this.props.cart.length + ")";
+	        var showlabel = "Kundvagn (" + (this.props.cart == null ? 0 : this.props.cart.length) + ")";
 	        return (React.createElement("div", {style: { float: "right" }}, 
 	            React.createElement("button", {style: { float: "right" }, className: "btn btn-primary", onClick: () => { this.props.cartToggle(); }}, this.props.cartIsVisible ? "Dölj kundvagn" : showlabel)
 	        ));
@@ -60126,6 +60144,7 @@
 	const Actions = __webpack_require__(258);
 	const loginoptions_1 = __webpack_require__(266);
 	const money_1 = __webpack_require__(341);
+	const spinner_1 = __webpack_require__(267);
 	class CheckoutDef extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -60144,7 +60163,9 @@
 	            UserId: self.props.user.facebook.id
 	        };
 	        self.props.startPlaceingOrder(o);
-	        alert("Din order är sparad. Du kan se status för alla dina ordrar på 'mina sidor'");
+	        self.setState({
+	            orderwasplacedtext: "Din order är sparad. Du kan se status för alla dina ordrar på 'mina sidor'"
+	        });
 	    }
 	    render() {
 	        var self = this;
@@ -60153,51 +60174,58 @@
 	            user = (React.createElement("div", null, 
 	                React.createElement("h2", null, "Du måste vara inloggad"), 
 	                React.createElement(loginoptions_1.LoginOptions, null)));
+	        var info = (React.createElement("div", {className: "alert alert-info", role: "alert"}, "Vill du lägga en order med dessa items?"));
+	        if (this.state && this.state.orderwasplacedtext) {
+	            info = (React.createElement("div", {className: "alert alert-success", role: "alert"}, this.state.orderwasplacedtext));
+	        }
+	        var table = (React.createElement("table", {className: "carttable"}, 
+	            React.createElement("thead", null, 
+	                React.createElement("tr", null, 
+	                    React.createElement("th", null, "Produkt"), 
+	                    React.createElement("th", null, "Pris/st"), 
+	                    React.createElement("th", null, "Antal"), 
+	                    React.createElement("th", null, "Totalt"), 
+	                    React.createElement("th", null))
+	            ), 
+	            React.createElement("tbody", null, 
+	                this.props.cart.map(function (row, index) {
+	                    var rowprice = row.Count * row.Product.Price;
+	                    total += rowprice;
+	                    return (React.createElement("tr", {key: index}, 
+	                        React.createElement("td", null, row.Product.Name), 
+	                        React.createElement("td", {style: { textAlign: "right" }}, 
+	                            React.createElement(money_1.Money, {money: row.Product.Price})
+	                        ), 
+	                        React.createElement("td", {style: { textAlign: "right" }}, 
+	                            row.Count, 
+	                            "st"), 
+	                        React.createElement("td", {style: { textAlign: "right" }}, 
+	                            React.createElement(money_1.Money, {money: rowprice})
+	                        ), 
+	                        React.createElement("td", null, 
+	                            React.createElement("button", {onClick: () => { self.removeRow(row); }}, "x")
+	                        )));
+	                }), 
+	                React.createElement("tr", null, 
+	                    React.createElement("td", {colSpan: 3}), 
+	                    React.createElement("td", {style: { textAlign: "right" }}, 
+	                        React.createElement(money_1.Money, {money: total})
+	                    ), 
+	                    React.createElement("td", null)))));
 	        var total = 0;
 	        return (React.createElement("div", null, 
-	            React.createElement("p", null, "Vill du lägga en order med dessa items?:"), 
+	            info, 
 	            user, 
-	            React.createElement("table", {className: "carttable"}, 
-	                React.createElement("thead", null, 
-	                    React.createElement("tr", null, 
-	                        React.createElement("th", null, "Produkt"), 
-	                        React.createElement("th", null, "Pris/st"), 
-	                        React.createElement("th", null, "Antal"), 
-	                        React.createElement("th", null, "Totalt"), 
-	                        React.createElement("th", null))
-	                ), 
-	                React.createElement("tbody", null, 
-	                    this.props.cart.map(function (row, index) {
-	                        var rowprice = row.Count * row.Product.Price;
-	                        total += rowprice;
-	                        return (React.createElement("tr", {key: index}, 
-	                            React.createElement("td", null, row.Product.Name), 
-	                            React.createElement("td", {style: { textAlign: "right" }}, 
-	                                React.createElement(money_1.Money, {money: row.Product.Price})
-	                            ), 
-	                            React.createElement("td", {style: { textAlign: "right" }}, 
-	                                row.Count, 
-	                                " st"), 
-	                            React.createElement("td", {style: { textAlign: "right" }}, 
-	                                React.createElement(money_1.Money, {money: rowprice})
-	                            ), 
-	                            React.createElement("td", null, 
-	                                React.createElement("button", {onClick: () => { self.removeRow(row); }}, "x")
-	                            )));
-	                    }), 
-	                    React.createElement("tr", null, 
-	                        React.createElement("td", {colSpan: 3}), 
-	                        React.createElement("td", {style: { textAlign: "right" }}, 
-	                            React.createElement(money_1.Money, {money: total})
-	                        ), 
-	                        React.createElement("td", null)))), 
+	            React.createElement(spinner_1.default, {isLoading: this.props.loading}), 
+	            this.props.cart.length > 0 ? table : null, 
 	            this.props.user ? (React.createElement("button", {onClick: () => self.placeOrder()}, "Lägg order")) : ""));
 	    }
 	}
 	const mapStateToProps = (state) => {
 	    return {
 	        cart: state.appstate.cart,
-	        user: state.appstate.user
+	        user: state.appstate.user,
+	        loading: state.appstate.placingOrder,
 	    };
 	};
 	const mapDispatchToProps = (dispatch) => {

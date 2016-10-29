@@ -1,9 +1,11 @@
 ﻿var mongoose = require('mongoose');
+//var OrderRow = mongoose.model('OrderRow');
 
 var orderSchema = mongoose.Schema({
-    UserId: String,   
+    UserId: String,
     Date: Date,
-    Status: Number
+    Status: Number,
+    OrderRows: [{ type: mongoose.Schema.Types.Object, ref: 'OrderRow' }]
 });
 
 module.exports = mongoose.model('Order', orderSchema);

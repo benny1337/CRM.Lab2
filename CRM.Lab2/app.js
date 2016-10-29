@@ -4,16 +4,17 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var routes = require('./routes/routes');
 var passport = require('passport');
 var session = require('express-session');
 var mongoose = require('mongoose');
-var app = express();
 var React = require('react')
 var Router = require('react-router')
 
 var configDB = require('./config/database.js');
 mongoose.connect(configDB.url); // connect to our database
+
+var routes = require('./routes/routes');
+var app = express();
 
 //auth setup
 app.use(session({
