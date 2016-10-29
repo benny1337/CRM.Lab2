@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 import Reducer from '../domain/reducer';
 import thunk from 'redux-thunk';
 import App from "../components/app";
-import { Home } from "../components/home";
+import Checkout from "../components/checkout";
 
 import ProductTable from "../components/producttable";
 import ProductDetail from "../components/productdetail";
@@ -23,7 +23,7 @@ ReactDOM.render(
                 <Route path="/product/:productname" component={ProductDetail} />                
                 <Route path="/profile" component={Profile} />
                 <Route path="/about" component={About} />
-
+                <Route path="/checkout" component={Checkout} />
             </Route>
         </Router>
     </Provider>,

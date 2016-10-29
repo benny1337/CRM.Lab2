@@ -21,7 +21,7 @@ class ProductService {
         return new Promise<Model.IProduct[]>((resolve, reject) => {
             fetch('/products/all').then(function (response) {
                 return response.json();
-            }).then(function (data) {
+            }).then(function (data) {                
                 resolve(data as Model.IProduct[]);
             }).catch(function (ex) {
                 console.log(ex);

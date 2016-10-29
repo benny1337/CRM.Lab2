@@ -26,6 +26,11 @@ export function productWasRemovedFromCart(row: Model.IOrderRow) {
     return { type: PRODUCT_WAS_REMOVED_FROM_CART, isAsync: true, payload: row } as Model.IAction
 } 
 
+export const CART_WAS_EMPTIED = "CART_WAS_EMPTIED";
+export function cartWasEmptied() {
+    return { type: CART_WAS_EMPTIED, isAsync: true } as Model.IAction
+} 
+
 export const ORDER_WAS_PLACED = "ORDER_WAS_PLACED";
 export function orderWasPlaced(order: Model.IOrder) {
     return { type: ORDER_WAS_PLACED, isAsync: true, payload: order } as Model.IAction
@@ -37,6 +42,7 @@ export function startPlaceingOrder(order: Model.IOrder) {
         let service = new Service.Service();
         return service.OrderService.saveOrder(order).then(function () {
             dispatch(orderWasPlaced(order));
+            dispatch(cartWasEmptied());
             dispatch(ayncOpertationEnded("Saving order"));
         }).catch(function (error) { dispatch(ayncOpertationEnded("Saving order")); });
     }

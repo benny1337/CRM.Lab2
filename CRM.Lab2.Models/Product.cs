@@ -30,5 +30,6 @@ namespace CRM.Lab2.Models
         public string AttributesCSV { get; set; }
         public string SeoName { get; set; }
         public string Subtitle { get; set; }
+        public string ProductId { get; set; }
     }
 }

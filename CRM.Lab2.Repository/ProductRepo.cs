@@ -42,7 +42,8 @@ namespace CRM.Lab2.Repository
                         Supplier = e.stq_supplier, 
                         AttributesCSV = e.stq_attributescsv,
                         OtherImagesCSV = e.stq_otherimagescsv,
-                        Subtitle = e.stq_subtitle
+                        Subtitle = e.stq_subtitle,
+                        ProductId = e.stq_productid
                     };
                 });
             }

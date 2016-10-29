@@ -2,10 +2,11 @@
 var router = express.Router();
 var passport = require('../config/passport');
 var products = require('../config/products');
+var orders = require('../config/orders');
 
 
-router.post("/orders", function (req, res) {
-    debugger;
+router.post("/orders", orders.save, function (req, res) {    
+    res.setHeader('Content-Type', 'application/json');    
     res.send({ status: 'SUCCESS' });
 });
 
@@ -13,17 +14,19 @@ router.get('/', function (req, res) {
     res.render('index', { header: '' });
 });
 
-
+router.get('/checkout', function (req, res) {
+    res.render('index', { header: 'Kassa' });
+});
 router.get('/about', function (req, res) {
-    res.render('index', { header: '' });
+    res.render('index', { header: 'Om' });
 });
 
 router.get('/products', function (req, res) {
-    res.render('index', { header: 'Products' });
+    res.render('index', { header: 'Produkter' });
 });
 
 router.get('/product/:productname', function (req, res) {
-    res.render('index', { header: 'Products' });
+    res.render('index', { header: 'Produkter' });
 });
 
 router.get('/products/all', products.getAll, function (req, res) {

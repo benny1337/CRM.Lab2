@@ -23,7 +23,7 @@ export interface IProduct {
     Name: string;
     Price: number;
     Text: string;
-    Id: string;
+    ProductId: string;
     ImgUrl: string;
     Supplier: string;
     OtherImagesCSV: string;

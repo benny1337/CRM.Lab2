@@ -36,7 +36,7 @@ class AppDef extends React.Component<IProps, {}> {
                     <Link to="/profile">Mina Sidor</Link>
                     <Link to="/about">Om</Link>
 
-                    <Spinner isLoading={this.props.isLoading} />{self.props.user ? <span>"Hej " + self.props.user.facebook.name</span> : self.props.isLoading ? "" : <LoginOptions />}
+                    <Spinner isLoading={this.props.isLoading} />{self.props.user ? <span>Hej {self.props.user.facebook.name}</span> : self.props.isLoading ? "" : <LoginOptions />}
                     <CartButton />
                 </div>
                 <div>

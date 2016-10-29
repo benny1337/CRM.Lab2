@@ -53,6 +53,7 @@
 	const reducer_1 = __webpack_require__(257);
 	const redux_thunk_1 = __webpack_require__(264);
 	const app_1 = __webpack_require__(265);
+	const checkout_1 = __webpack_require__(340);
 	const producttable_1 = __webpack_require__(284);
 	const productdetail_1 = __webpack_require__(319);
 	const profile_1 = __webpack_require__(338);
@@ -64,7 +65,8 @@
 	            React.createElement(react_router_1.IndexRoute, {component: producttable_1.default}), 
 	            React.createElement(react_router_1.Route, {path: "/product/:productname", component: productdetail_1.default}), 
 	            React.createElement(react_router_1.Route, {path: "/profile", component: profile_1.Profile}), 
-	            React.createElement(react_router_1.Route, {path: "/about", component: about_1.About}))
+	            React.createElement(react_router_1.Route, {path: "/about", component: about_1.About}), 
+	            React.createElement(react_router_1.Route, {path: "/checkout", component: checkout_1.default}))
 	    )
 	), document.getElementById("content"));
 
@@ -28624,6 +28626,11 @@
 	            return Object.assign({}, state, {
 	                cart: items
 	            });
+	        case Actions.CART_WAS_EMPTIED:
+	            localStorage.setItem(STOREKEY, null);
+	            return Object.assign({}, state, {
+	                cart: []
+	            });
 	        case Actions.PRODUCT_WAS_ADDED_TO_CART:
 	            var cart = [...state.cart, action.payload];
 	            localStorage.setItem(STOREKEY, JSON.stringify(cart));
@@ -28699,6 +28706,11 @@
 	    return { type: exports.PRODUCT_WAS_REMOVED_FROM_CART, isAsync: true, payload: row };
 	}
 	exports.productWasRemovedFromCart = productWasRemovedFromCart;
+	exports.CART_WAS_EMPTIED = "CART_WAS_EMPTIED";
+	function cartWasEmptied() {
+	    return { type: exports.CART_WAS_EMPTIED, isAsync: true };
+	}
+	exports.cartWasEmptied = cartWasEmptied;
 	exports.ORDER_WAS_PLACED = "ORDER_WAS_PLACED";
 	function orderWasPlaced(order) {
 	    return { type: exports.ORDER_WAS_PLACED, isAsync: true, payload: order };
@@ -28711,6 +28723,7 @@
 	        let service = new Service.Service();
 	        return service.OrderService.saveOrder(order).then(function () {
 	            dispatch(orderWasPlaced(order));
+	            dispatch(cartWasEmptied());
 	            dispatch(ayncOpertationEnded("Saving order"));
 	        }).catch(function (error) { dispatch(ayncOpertationEnded("Saving order")); });
 	    };
@@ -32412,7 +32425,9 @@
 	                React.createElement(react_router_1.Link, {to: "/profile"}, "Mina Sidor"), 
 	                React.createElement(react_router_1.Link, {to: "/about"}, "Om"), 
 	                React.createElement(spinner_1.default, {isLoading: this.props.isLoading}), 
-	                self.props.user ? React.createElement("span", null, "\"Hej \" + self.props.user.facebook.name") : self.props.isLoading ? "" : React.createElement(loginoptions_1.LoginOptions, null), 
+	                self.props.user ? React.createElement("span", null, 
+	                    "Hej ", 
+	                    self.props.user.facebook.name) : self.props.isLoading ? "" : React.createElement(loginoptions_1.LoginOptions, null), 
 	                React.createElement(cartbutton_1.default, null)), 
 	            React.createElement("div", null, this.props.children), 
 	            React.createElement("div", {className: "alert alert-success", role: "alert"}, 
@@ -32516,13 +32531,19 @@
 	const react_redux_1 = __webpack_require__(250);
 	const Actions = __webpack_require__(258);
 	const react_motion_1 = __webpack_require__(269);
+	const react_router_1 = __webpack_require__(172);
 	class CartDef extends React.Component {
 	    constructor(props) {
 	        super(props);
 	        this.removeWasPressed.bind(this);
+	        this.checkoutButtonWasPressed.bind(this);
 	    }
 	    removeWasPressed(row) {
 	        this.props.removeRowWasPressed(row);
+	    }
+	    checkoutButtonWasPressed() {
+	        this.props.cartToggle();
+	        react_router_1.browserHistory.push('/checkout');
 	    }
 	    render() {
 	        var self = this;
@@ -32541,7 +32562,7 @@
 	                        " ", 
 	                        React.createElement("button", {onClick: () => { self.removeWasPressed(row); }}, "x")));
 	                }), 
-	                this.props.cart.length < 1 ? React.createElement("h5", null, "Du har inte valt något") : React.createElement("button", {className: "checkout"}, "Gå till kassan"))
+	                this.props.cart.length < 1 ? React.createElement("h5", null, "Du har inte valt något") : React.createElement("button", {onClick: () => { this.checkoutButtonWasPressed(); }, className: "checkout"}, "Gå till kassan"))
 	        )));
 	    }
 	}
@@ -32555,6 +32576,9 @@
 	    return {
 	        removeRowWasPressed: (row) => {
 	            dispatch(Actions.productWasRemovedFromCart(row));
+	        },
+	        cartToggle: () => {
+	            dispatch(Actions.cartWasToggled());
 	        },
 	    };
 	};
@@ -60089,6 +60113,128 @@
 	    }
 	}
 	exports.About = About;
+
+
+/***/ },
+/* 340 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const Model = __webpack_require__(261);
+	const react_redux_1 = __webpack_require__(250);
+	const Actions = __webpack_require__(258);
+	const loginoptions_1 = __webpack_require__(266);
+	const money_1 = __webpack_require__(341);
+	class CheckoutDef extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        this.removeRow.bind(this);
+	        this.placeOrder.bind(this);
+	    }
+	    removeRow(row) {
+	        this.props.removeRowWasPressed(row);
+	    }
+	    placeOrder() {
+	        var self = this;
+	        var o = {
+	            Date: new Date(),
+	            OrderRows: self.props.cart,
+	            Status: Model.OrderState.Pending,
+	            UserId: self.props.user.facebook.id
+	        };
+	        self.props.startPlaceingOrder(o);
+	        alert("Din order är sparad. Du kan se status för alla dina ordrar på 'mina sidor'");
+	    }
+	    render() {
+	        var self = this;
+	        var user = null;
+	        if (!this.props.user)
+	            user = (React.createElement("div", null, 
+	                React.createElement("h2", null, "Du måste vara inloggad"), 
+	                React.createElement(loginoptions_1.LoginOptions, null)));
+	        var total = 0;
+	        return (React.createElement("div", null, 
+	            React.createElement("p", null, "Vill du lägga en order med dessa items?:"), 
+	            user, 
+	            React.createElement("table", {className: "carttable"}, 
+	                React.createElement("thead", null, 
+	                    React.createElement("tr", null, 
+	                        React.createElement("th", null, "Produkt"), 
+	                        React.createElement("th", null, "Pris/st"), 
+	                        React.createElement("th", null, "Antal"), 
+	                        React.createElement("th", null, "Totalt"), 
+	                        React.createElement("th", null))
+	                ), 
+	                React.createElement("tbody", null, 
+	                    this.props.cart.map(function (row, index) {
+	                        var rowprice = row.Count * row.Product.Price;
+	                        total += rowprice;
+	                        return (React.createElement("tr", {key: index}, 
+	                            React.createElement("td", null, row.Product.Name), 
+	                            React.createElement("td", {style: { textAlign: "right" }}, 
+	                                React.createElement(money_1.Money, {money: row.Product.Price})
+	                            ), 
+	                            React.createElement("td", {style: { textAlign: "right" }}, 
+	                                row.Count, 
+	                                " st"), 
+	                            React.createElement("td", {style: { textAlign: "right" }}, 
+	                                React.createElement(money_1.Money, {money: rowprice})
+	                            ), 
+	                            React.createElement("td", null, 
+	                                React.createElement("button", {onClick: () => { self.removeRow(row); }}, "x")
+	                            )));
+	                    }), 
+	                    React.createElement("tr", null, 
+	                        React.createElement("td", {colSpan: 3}), 
+	                        React.createElement("td", {style: { textAlign: "right" }}, 
+	                            React.createElement(money_1.Money, {money: total})
+	                        ), 
+	                        React.createElement("td", null)))), 
+	            this.props.user ? (React.createElement("button", {onClick: () => self.placeOrder()}, "Lägg order")) : ""));
+	    }
+	}
+	const mapStateToProps = (state) => {
+	    return {
+	        cart: state.appstate.cart,
+	        user: state.appstate.user
+	    };
+	};
+	const mapDispatchToProps = (dispatch) => {
+	    return {
+	        removeRowWasPressed: (row) => {
+	            dispatch(Actions.productWasRemovedFromCart(row));
+	        },
+	        startPlaceingOrder: (order) => {
+	            dispatch(Actions.startPlaceingOrder(order));
+	        }
+	    };
+	};
+	const Checkout = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(CheckoutDef);
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Checkout;
+
+
+/***/ },
+/* 341 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	class Money extends React.Component {
+	    constructor(props) {
+	        super(props);
+	    }
+	    toMoney() {
+	        let n = 2, x = 3, s = '.', c = ',';
+	        var re = '\\d(?=(\\d{' + (x || 3) + '})+' + (n > 0 ? '\\D' : '$') + ')', num = this.props.money.toFixed(Math.max(0, ~~n));
+	        return (c ? num.replace('.', c) : num).replace(new RegExp(re, 'g'), '$&' + (s || ',')) + " kr";
+	    }
+	    render() {
+	        return (React.createElement("span", null, this.toMoney()));
+	    }
+	}
+	exports.Money = Money;
 
 
 /***/ }

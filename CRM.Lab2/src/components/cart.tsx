@@ -3,12 +3,13 @@ import * as Model from '../domain/model';
 import { connect } from 'react-redux'
 import * as Actions from '../domain/actions';
 import { Motion, spring } from 'react-motion';
-
+import { browserHistory } from 'react-router'
 
 interface IProps {
     cartIsVisible: boolean;
     cart: Model.IOrderRow[];
     removeRowWasPressed: (row: Model.IOrderRow) => void;
+    cartToggle: () => void;
 }
 
 class CartDef extends React.Component<IProps, {}> {
@@ -17,10 +18,16 @@ class CartDef extends React.Component<IProps, {}> {
         super(props);
 
         this.removeWasPressed.bind(this);
+        this.checkoutButtonWasPressed.bind(this);
     }
 
     removeWasPressed(row: Model.IOrderRow) {
         this.props.removeRowWasPressed(row);
+    }
+
+    checkoutButtonWasPressed() {
+        this.props.cartToggle();
+        browserHistory.push('/checkout');
     }
 
     render() {
@@ -42,7 +49,7 @@ class CartDef extends React.Component<IProps, {}> {
                             )
                         })}
 
-                        {this.props.cart.length < 1 ? <h5>Du har inte valt något</h5> : <button className="checkout">Gå till kassan</button>}
+                        {this.props.cart.length < 1 ? <h5>Du har inte valt något</h5> : <button onClick={() => { this.checkoutButtonWasPressed() } } className="checkout">Gå till kassan</button>}
                         </div>
                     </div>
                 }
@@ -63,7 +70,9 @@ const mapDispatchToProps = (dispatch: any) => {
         removeRowWasPressed: (row: Model.IOrderRow) => {
             dispatch(Actions.productWasRemovedFromCart(row));
         },
-
+        cartToggle: () => {
+            dispatch(Actions.cartWasToggled());
+        },
     }
 }
 const Cart = connect(

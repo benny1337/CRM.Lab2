@@ -3,28 +3,27 @@ var OrderRow = require('../app/models/orderrow');
 
 var orders = (function () {
     var my = {};
-    my.save = function (req, res, next) {
-        next();
-    }
-    my.getAll = function (req, res, next) {       
-
-        Product.find({}, function (err, products) {
-            res.products = products;
-            return next();
+    my.save = function (req, res, next) {        
+        var order = new Order({            
+            UserId: req.body.UserId,
+            Status: req.body.Status            
         });
-
-    }
-
-    my.getOne = function (req, res, next) {
-        var name = req.params.seoname
-        Product.find({ SeoName: name }, function (err, products) {
-            if (products.length < 1)
-                return next();
-            res.product = products[0];
-            return next();
+        order.save(function (err) {
+            if (err) throw err;
+            req.body.OrderRows.forEach(function (row, index) {
+                var r = new OrderRow({
+                    ProductId: row.Product.ProductId,
+                    OrderId: order.id,
+                    Count: row.Count
+                });
+                r.save(function (err) {
+                    if (err)
+                        throw err;
+                });
+            });
+            next();
         });
-
-    }
+    }   
 
     return my;
 })();

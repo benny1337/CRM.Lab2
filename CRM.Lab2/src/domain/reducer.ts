@@ -58,6 +58,11 @@ function appstate(state = {
             return (<any>Object).assign({}, state, {
                 cart: items
             });
+        case Actions.CART_WAS_EMPTIED:
+            localStorage.setItem(STOREKEY, null);
+            return (<any>Object).assign({}, state, {
+                cart: []
+            });
         case Actions.PRODUCT_WAS_ADDED_TO_CART:
             var cart = [...state.cart, action.payload];            
             localStorage.setItem(STOREKEY, JSON.stringify(cart));
