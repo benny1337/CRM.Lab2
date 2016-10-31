@@ -7,9 +7,11 @@ const STOREKEY = "cart";
 
 interface IState {
     user: Model.IUser;
+    orders: Model.IOrder[];
     products: Model.IProduct[];
     currentProduct: Model.IProduct;
     isLoading: boolean;
+    isLoggingIn: boolean;
     placingOrder: boolean;
     asyncactions: Model.IAction[];
     cart: Model.IOrderRow[];
@@ -18,6 +20,7 @@ interface IState {
 
 function appstate(state = {
     user: null,
+    orders: [],
     isLoading: false,
     placingOrder:false,
     currentProduct: null,
@@ -81,14 +84,24 @@ function appstate(state = {
             return (<any>Object).assign({}, state, {
                 cart: cart,
             });
-        case Actions.REQUESTING_USER:
+        case Actions.ORDERS_IS_RECIEVING:
             return (<any>Object).assign({}, state, {
-                isLoading: true,                
+                isLoading: true,
+                orders:[],
+            });       
+        case Actions.RECIEVED_ORDERS:            
+            return (<any>Object).assign({}, state, {
+                orders: action.payload ? action.payload : []                
             });
         case Actions.RECIEVED_USER:            
             return (<any>Object).assign({}, state, {
-                isLoading: false,
+                isLoggingIn: false,
                 user: action.payload
+            });
+        case Actions.REQUESTING_USER:
+            return(<any>Object).assign({}, state, {
+                isLoggingIn: true,
+                user: null
             });
         case Actions.REQUESTING_PRODUCTS:            
             return (<any>Object).assign({}, state, {

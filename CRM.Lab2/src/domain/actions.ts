@@ -52,6 +52,29 @@ export function startPlaceingOrder(order: Model.IOrder) {
     }
 }
 
+export const RECIEVED_ORDERS = "RECIEVED_ORDERS";
+export function recievedOrders(orders: Model.IOrder[]) {    
+    return { type: RECIEVED_ORDERS, isAsync: true, payload: orders } as Model.IAction
+} 
+
+export const ORDERS_IS_RECIEVING = "ORDERS_IS_RECIEVING";
+export function ordersIsRecieving() {
+    return { type: RECIEVED_ORDERS, isAsync: true } as Model.IAction
+} 
+
+export const START_REQUESTING_ORDERS = "START_REQUESTING_ORDERS";
+export function startRequestingOrders() {
+    return function (dispatch: any) {
+        dispatch(ayncOpertationStarted("Fetching logged on users orders"));
+        dispatch(ordersIsRecieving());
+        let service = new Service.Service();
+        return service.OrderService.retrieveOrders().then(function (orders) {                        
+            dispatch(recievedOrders(orders));
+            dispatch(ayncOpertationEnded("Fetching logged on users orders"));
+        }).catch(function (error) { dispatch(ayncOpertationEnded("Fetching logged on users orders")); });
+    }
+}
+
 //user
 export const REQUESTING_USER = "REQUESTING_USER";
 export function requestingUser() {

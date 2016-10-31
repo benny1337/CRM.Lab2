@@ -8,7 +8,7 @@
     <EnableTypeScript>true</EnableTypeScript>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
-    <NameOfLastUsedPublishProfile>CRMLab220161019055137 - Web Deploy</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>CRMLab2webshop - Web Deploy</NameOfLastUsedPublishProfile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -51,10 +51,9 @@
     <Compile Include="routes\routes.js" />
     <Compile Include="bin\www" />
     <Compile Include="webpack.config.js" />
-    <None Include="CRMLab220161019055137 - Web Deploy.pubxml" />
+    <None Include="CRMLab2webshop - Web Deploy.pubxml" />
     <Content Include="node_modules\react-masonry-component\.idea\.name" />
     <Content Include="node_modules\react-masonry-component\.idea\compiler.xml" />
-    <Content Include="node_modules\react-masonry-component\.idea\copyright\profiles_settings.xml" />
     <Content Include="node_modules\react-masonry-component\.idea\encodings.xml" />
     <Content Include="node_modules\react-masonry-component\.idea\jsLibraryMappings.xml" />
     <Content Include="node_modules\react-masonry-component\.idea\misc.xml" />
@@ -111,7 +110,6 @@
     <Folder Include="node_modules\" />
     <Folder Include="node_modules\react-masonry-component\" />
     <Folder Include="node_modules\react-masonry-component\.idea\" />
-    <Folder Include="node_modules\react-masonry-component\.idea\copyright\" />
     <Folder Include="node_modules\react-masonry-component\lib\" />
     <Folder Include="node_modules\react-masonry-component\node_modules\" />
     <Folder Include="node_modules\react-masonry-component\node_modules\lodash.assign\" />

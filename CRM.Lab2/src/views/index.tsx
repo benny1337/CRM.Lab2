@@ -10,7 +10,7 @@ import Checkout from "../components/checkout";
 
 import ProductTable from "../components/producttable";
 import ProductDetail from "../components/productdetail";
-import { Profile } from "../components/profile";
+import Profile from "../components/profile";
 import { About } from "../components/about";
 
 let store = createStore(Reducer, applyMiddleware(thunk));

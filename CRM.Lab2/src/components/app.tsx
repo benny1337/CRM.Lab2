@@ -11,6 +11,7 @@ import CartButton from './cartbutton';
 interface IProps {
     initLoadUser: () => void;
     isLoading: boolean;
+    isLoggingIn: boolean;
     asyncactions: Model.IAction[];
     user: Model.IUser;
     cart: Model.IOrderRow[];
@@ -35,8 +36,9 @@ class AppDef extends React.Component<IProps, {}> {
                     <Link to="/">Produkter</Link>
                     <Link to="/profile">Mina Sidor</Link>
                     <Link to="/about">Om</Link>
-
-                    <Spinner isLoading={this.props.isLoading} />{self.props.user ? <span>Hej {self.props.user.facebook.name}</span> : self.props.isLoading ? "" : <LoginOptions />}
+                    
+                    <Spinner isLoading={this.props.isLoggingIn} />
+                    {self.props.user ? <span>Hej {self.props.user.facebook.name}</span> : (self.props.isLoggingIn ? "" : <LoginOptions />)}
                     <CartButton />
                 </div>
                 <div>
@@ -62,6 +64,7 @@ const mapStateToProps = (state: any) => {
     return {
         user: state.appstate.user,
         isLoading: state.appstate.isLoading,
+        isLoggingIn: state.appstate.isLoggingIn,
         asyncactions: state.appstate.asyncactions,
         cart: state.appstate.cart
     }

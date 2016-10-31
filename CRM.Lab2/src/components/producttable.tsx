@@ -11,7 +11,6 @@ import 'whatwg-fetch';
 import { browserHistory } from 'react-router'
 import Masonry from 'react-masonry-component';
 
-
 interface IProps {
     isLoading: boolean;
     products: Model.IProduct[];
@@ -71,13 +70,11 @@ class ProductTableDef extends React.Component<IProps, IState> {
             <div>
                 <Spinner isLoading={self.props.isLoading} />
                 <AddToCartDialogue product={self.state.product} productWasAdded={self.okWasPressed.bind(self)} cancel={self.requestCloseFn.bind(self)} />
-                
                 <Masonry
                     elementType={'ul'} // default 'div'
                     disableImagesLoaded={false} // default false
                     updateOnEachImageLoad={false} // default false and works only if disableImagesLoaded is false
                     >
-
                     {self.props.products.map(function (product, index) {
                         var url = "/product/" + product.SeoName;
                         return (

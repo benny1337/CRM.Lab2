@@ -31,7 +31,6 @@
     "passport-local": "~0.1.6",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
-    "react-masonry-component": "^4.2.2",
     "react-modal": "^1.5.2",
     "react-motion": "^0.4.5",
     "react-redux": "^4.4.5",
@@ -45,7 +44,9 @@
     "slick-carousel": "^1.6.0",
     "stylus": "0.42.3",
     "whatwg-fetch": "^1.0.0",
-    "whatwg-streams": "^0.1.1"
+    "whatwg-streams": "^0.1.1",
+    "react-masonry-component": "4.2.2",
+    "typescript": "2.0.6"
   },
   "devDependencies": {
     "source-map-loader": "^0.1.5",

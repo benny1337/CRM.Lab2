@@ -14,6 +14,27 @@ class OrderService {
             }).then(function (resp) { resolve(); }).catch(function (err) { reject(err); });
         });
     }
+    retrieveOrders() {
+        return new Promise<Model.IOrder[]>((resolve, reject) => {
+            fetch('/orders/all', {
+                credentials: 'same-origin'
+            }).then(function (response) {
+                return response.text();
+            }).then(function (text) {                
+                if (text == "")
+                    resolve();
+                try {
+                    var data = JSON.parse(text);
+                    resolve(data as Model.IOrder[]);
+                } catch (e){
+                    resolve();
+                }
+            }).catch(function (ex) {
+                console.log(ex);
+                reject(ex);
+            });
+        });
+    }
 }
 
 class ProductService {

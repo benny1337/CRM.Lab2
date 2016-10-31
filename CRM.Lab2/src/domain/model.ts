@@ -42,6 +42,19 @@ export enum OrderState {
     Placed = 1,
     Done = 2
 }
+export module EnumToString {    
+    export function orderState(state: OrderState): string {
+        switch (state) {
+            case OrderState.Done:
+                return "Klar";
+            case OrderState.Pending:
+                return "Väntar på att skickas till CRM";
+            case OrderState.Placed:
+                return "Är skickad till CRM";
+        }
+    }
+}
+
 export interface IOrderRow {
     Order: IOrder,
     Product: IProduct,
