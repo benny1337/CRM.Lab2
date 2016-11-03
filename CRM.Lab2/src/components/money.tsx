@@ -3,6 +3,7 @@ import * as Model from '../domain/model';
 
 interface IProps {
     money: number;
+    style?: any;
 }
 
 export class Money extends React.Component<IProps, {}> {
@@ -21,11 +22,7 @@ export class Money extends React.Component<IProps, {}> {
     }
 
     render() {
-
-        return (
-            <span>
-                {this.toMoney()}
-            </span>
-        )
+        return this.props.style ? <span style={this.props.style}>{ this.toMoney() }</span> : <span>{this.toMoney()}</span>            
+        
     }
 }

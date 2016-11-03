@@ -46,11 +46,11 @@ class CartDef extends React.Component<IProps, {}> {
                         <h2>Kundvagn</h2>
                         {this.props.cart.map(function (row, index) {
                                 return (
-                                    <div className="item" key={index}>{row.Count}st: {row.Product.Name} <button onClick={() => { self.removeWasPressed(row); } }>x</button></div>
+                                    <div className="item" key={index}>{row.Count}st: {row.Product.Name} <i onClick={() => { self.removeWasPressed(row); } } className="material-icons md-dark button">delete</i></div>
                             )
                         })}
 
-                        {this.props.cart.length < 1 ? <h5>Du har inte valt något</h5> : <button onClick={() => { this.checkoutButtonWasPressed() } } className="checkout">Gå till kassan</button>}
+                        {this.props.cart.length < 1 ? <h5>Du har inte valt något</h5> : <button onClick={() => { this.checkoutButtonWasPressed() } } className="btn btn-success checkout">Gå till kassan</button>}
                         </div>
                     </div>
                 }

@@ -10,18 +10,7 @@ var orders = (function () {
             OrderRows: req.body.OrderRows
         });
         order.save(function (err) {
-            if (err) throw err;
-            //req.body.OrderRows.forEach(function (row, index) {
-            //    var r = new OrderRow({
-            //        ProductId: row.Product.ProductId,
-            //        OrderId: order.id,
-            //        Count: row.Count
-            //    });
-            //    r.save(function (err) {
-            //        if (err)
-            //            throw err;
-            //    });
-            //});
+            if (err) throw err;            
             next();
         });
     }

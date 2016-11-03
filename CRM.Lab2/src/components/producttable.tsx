@@ -3,6 +3,7 @@ import * as Model from '../domain/model';
 import * as Actions from '../domain/actions';
 import { connect } from 'react-redux'
 import Spinner from './spinner';
+import { Money } from './money';
 import { AddToCartButton } from './addtocartbutton';
 import { AddToCartDialogue } from './addtocartdialogue';
 import { AttributesCSVDisplayer } from './attributescsvdisplayer';
@@ -95,7 +96,7 @@ class ProductTableDef extends React.Component<IProps, IState> {
                                     <AttributesCSVDisplayer attributescsv={product.AttributesCSV} />
                                 </div>
                                 <div className="productfooter">
-                                    <span className="price">{product.Price}:-</span>
+                                    <span className="price"><Money money={product.Price} /></span>
                                     <AddToCartButton product={product} addProduct={self.addToCart.bind(self)} />                                    
                                 </div>
 

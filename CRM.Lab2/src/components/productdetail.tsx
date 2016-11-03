@@ -7,6 +7,7 @@ import { ImageCSVSlider } from './imagecsvslider';
 import { AttributesCSVDisplayer } from './attributescsvdisplayer';
 import { AddToCartButton } from './addtocartbutton';
 import { AddToCartDialogue } from './addtocartdialogue';
+import { Money } from './money';
 
 interface IProps {
     loadProduct(seoname: string): () => void;
@@ -78,7 +79,7 @@ class ProductDetailDef extends React.Component<IProps, IState> {
                 <div className="productdetailactions">
                     <div>
                         Fynda nu, endast<br />
-                        <span className="price">{this.props.product.Price}:-</span>
+                        <span className="price"><Money money={this.props.product.Price} /></span>
                         <AddToCartButton product={this.props.product} addProduct={this.addToCart.bind(this)} />
                     </div>
                     

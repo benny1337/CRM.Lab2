@@ -44,10 +44,10 @@ class CheckoutDef extends React.Component<IProps, IState> {
             orderwasplacedtext: "Din order är sparad. Du kan se status för alla dina ordrar på 'mina sidor'"
         });
     }
-
     render() {
         var self = this;
         var user: any = null;
+        var total = 0;
         if (!this.props.user)
             user = (
                 <div>
@@ -89,13 +89,16 @@ class CheckoutDef extends React.Component<IProps, IState> {
                                 <td style={{ textAlign: "right" }}><Money money={row.Product.Price} /></td>
                                 <td style={{ textAlign: "right" }}>{row.Count}st</td>
                                 <td style={{ textAlign: "right" }}><Money money={rowprice} /></td>
-                                <td><button onClick={() => { self.removeRow(row); } }>x</button></td>
+                                <td><i onClick={() => { self.removeRow(row); } } className="material-icons md-dark button">delete</i></td>
                             </tr>
                         )
-                    })}
+                    })}                   
                     <tr>
-                        <td colSpan={3}></td>
-                        <td style={{ textAlign: "right" }}><Money money={total} /></td>
+                        <td><b>Totalt</b></td>
+                        <td colSpan={2}></td>
+                        <td style={{
+                            textAlign: "right",
+                        }}><Money style={{fontWeight: "bold"}} money={total} /></td>
                         <td></td>
                     </tr>
                 </tbody>
@@ -104,14 +107,21 @@ class CheckoutDef extends React.Component<IProps, IState> {
         var total = 0;
         return (
 
-            <div>
+            <div style={{
+                padding: "20px",
+                maxWidth: "1050px"
+            }}>
                 {info}
                 {user}
+
                 <Spinner isLoading={this.props.loading} />
 
                 {this.props.cart.length > 0 ? table : null}
-
-                {this.props.user ? (<button onClick={() => self.placeOrder()}>Lägg order</button>) : ""}
+                <div style={{
+                    textAlign: "right"
+                }}>
+                    {this.props.user ? (<button className="btn btn-success" onClick={() => self.placeOrder()}>Lägg order</button>) : ""}
+                </div>
             </div>
         )
     }

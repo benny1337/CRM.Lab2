@@ -32649,9 +32649,9 @@
 	                        "st: ", 
 	                        row.Product.Name, 
 	                        " ", 
-	                        React.createElement("button", {onClick: () => { self.removeWasPressed(row); }}, "x")));
+	                        React.createElement("i", {onClick: () => { self.removeWasPressed(row); }, className: "material-icons md-dark button"}, "delete")));
 	                }), 
-	                this.props.cart.length < 1 ? React.createElement("h5", null, "Du har inte valt något") : React.createElement("button", {onClick: () => { this.checkoutButtonWasPressed(); }, className: "checkout"}, "Gå till kassan"))
+	                this.props.cart.length < 1 ? React.createElement("h5", null, "Du har inte valt något") : React.createElement("button", {onClick: () => { this.checkoutButtonWasPressed(); }, className: "btn btn-success checkout"}, "Gå till kassan"))
 	        )));
 	    }
 	}
@@ -34216,6 +34216,7 @@
 	    render() {
 	        var self = this;
 	        var user = null;
+	        var total = 0;
 	        if (!this.props.user)
 	            user = (React.createElement("div", null, 
 	                React.createElement("h2", null, "Du måste vara inloggad"), 
@@ -34249,22 +34250,32 @@
 	                            React.createElement(money_1.Money, {money: rowprice})
 	                        ), 
 	                        React.createElement("td", null, 
-	                            React.createElement("button", {onClick: () => { self.removeRow(row); }}, "x")
+	                            React.createElement("i", {onClick: () => { self.removeRow(row); }, className: "material-icons md-dark button"}, "delete")
 	                        )));
 	                }), 
 	                React.createElement("tr", null, 
-	                    React.createElement("td", {colSpan: 3}), 
-	                    React.createElement("td", {style: { textAlign: "right" }}, 
-	                        React.createElement(money_1.Money, {money: total})
+	                    React.createElement("td", null, 
+	                        React.createElement("b", null, "Totalt")
+	                    ), 
+	                    React.createElement("td", {colSpan: 2}), 
+	                    React.createElement("td", {style: {
+	                        textAlign: "right",
+	                    }}, 
+	                        React.createElement(money_1.Money, {style: { fontWeight: "bold" }, money: total})
 	                    ), 
 	                    React.createElement("td", null)))));
 	        var total = 0;
-	        return (React.createElement("div", null, 
+	        return (React.createElement("div", {style: {
+	            padding: "20px",
+	            maxWidth: "1050px"
+	        }}, 
 	            info, 
 	            user, 
 	            React.createElement(spinner_1.default, {isLoading: this.props.loading}), 
 	            this.props.cart.length > 0 ? table : null, 
-	            this.props.user ? (React.createElement("button", {onClick: () => self.placeOrder()}, "Lägg order")) : ""));
+	            React.createElement("div", {style: {
+	                textAlign: "right"
+	            }}, this.props.user ? (React.createElement("button", {className: "btn btn-success", onClick: () => self.placeOrder()}, "Lägg order")) : "")));
 	    }
 	}
 	const mapStateToProps = (state) => {
@@ -34305,7 +34316,7 @@
 	        return (c ? num.replace('.', c) : num).replace(new RegExp(re, 'g'), '$&' + (s || ',')) + " kr";
 	    }
 	    render() {
-	        return (React.createElement("span", null, this.toMoney()));
+	        return this.props.style ? React.createElement("span", {style: this.props.style}, this.toMoney()) : React.createElement("span", null, this.toMoney());
 	    }
 	}
 	exports.Money = Money;
@@ -34320,6 +34331,7 @@
 	const Actions = __webpack_require__(258);
 	const react_redux_1 = __webpack_require__(250);
 	const spinner_1 = __webpack_require__(267);
+	const money_1 = __webpack_require__(285);
 	const addtocartbutton_1 = __webpack_require__(287);
 	const addtocartdialogue_1 = __webpack_require__(288);
 	const attributescsvdisplayer_1 = __webpack_require__(309);
@@ -34377,8 +34389,8 @@
 	                        React.createElement(attributescsvdisplayer_1.AttributesCSVDisplayer, {attributescsv: product.AttributesCSV})), 
 	                    React.createElement("div", {className: "productfooter"}, 
 	                        React.createElement("span", {className: "price"}, 
-	                            product.Price, 
-	                            ":-"), 
+	                            React.createElement(money_1.Money, {money: product.Price})
+	                        ), 
 	                        React.createElement(addtocartbutton_1.AddToCartButton, {product: product, addProduct: self.addToCart.bind(self)}))));
 	            }))));
 	    }
@@ -41940,6 +41952,7 @@
 	const attributescsvdisplayer_1 = __webpack_require__(309);
 	const addtocartbutton_1 = __webpack_require__(287);
 	const addtocartdialogue_1 = __webpack_require__(288);
+	const money_1 = __webpack_require__(285);
 	class ProductDetailDef extends React.Component {
 	    constructor(props) {
 	        super(props);
@@ -41990,8 +42003,8 @@
 	                    "Fynda nu, endast", 
 	                    React.createElement("br", null), 
 	                    React.createElement("span", {className: "price"}, 
-	                        this.props.product.Price, 
-	                        ":-"), 
+	                        React.createElement(money_1.Money, {money: this.props.product.Price})
+	                    ), 
 	                    React.createElement(addtocartbutton_1.AddToCartButton, {product: this.props.product, addProduct: this.addToCart.bind(this)}))
 	            )));
 	    }
