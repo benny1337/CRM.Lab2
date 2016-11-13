@@ -31,12 +31,14 @@ namespace CRM.Lab2.ProductWebJob
             var db = new Mongo();
 
             var collection = db.GetOrderCollectionForEdit();
-            var filter = Builders<dynamic>.Filter.Eq("Status", 0);
+            var filter = Builders<dynamic>.Filter.Eq("Status", OrderStatus.Pending);
 
             var orders = collection.Find(filter);
-
             repo.SaveOrders(orders.ToEnumerable().Select<dynamic, Order>(x => Order.CreateOrderFromDynamic(x)));
 
+
+            var update = Builders<dynamic>.Update.Set("Status", (int)OrderStatus.Placed);
+            collection.UpdateMany(filter, update);
         }
 
 

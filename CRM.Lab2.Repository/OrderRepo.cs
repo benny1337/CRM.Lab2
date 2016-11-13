@@ -26,7 +26,7 @@ namespace CRM.Lab2.Repository
             var accountrepo = new AccountRepo();
             var convertedOrders = orders.Select<Order, object>((o) =>
             {
-                var accountid = accountrepo.GetAccountIdByExternalId(o.UserId);
+                var accountid = accountrepo.GetAccountIdByExternalIdAsync(o.UserId).Result;
                 dynamic order = new ExpandoObject();
                 order.name = "web order";
                 order.order_details = o.OrderRows.Select((row) =>

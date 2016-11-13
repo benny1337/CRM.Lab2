@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xrm.Tools.WebAPI;
+using Xrm.Tools.WebAPI.Requests;
 
 namespace CRM.Lab2.Repository
 {
@@ -16,9 +17,17 @@ namespace CRM.Lab2.Repository
             _api = new API().Connection;
         }
 
-        public Guid GetAccountIdByExternalId(string id)
+        public async Task<Guid> GetAccountIdByExternalIdAsync(string id)
         {
-            return Guid.Empty;
+            var result = await _api.GetList("accounts", new CRMGetListOptions()
+            {
+                Select = new List<string>() { "accountid" }.ToArray(),
+                Filter = $@"stq_externalid eq '{id}'",
+            });
+            if((result?.List?.Count ?? 0) < 1)
+                return Guid.Empty;
+
+            return new Guid((result.List.FirstOrDefault() as dynamic).accountid);
         }
 
     }
