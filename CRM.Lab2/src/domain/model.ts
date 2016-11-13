@@ -1,4 +1,6 @@
-﻿export interface IError {
+﻿import 'linq';
+
+export interface IError {
     severity: ErrorSeverity;
     message: string;
 }
@@ -33,16 +35,33 @@ export interface IProduct {
 }
 export interface IOrder {
     UserId: string;
+    UserFullName: string;
+    UserEmail: string;
     OrderRows: IOrderRow[];
     Date: Date;
-    Status: OrderState
+    Status: OrderState;
 }
 export enum OrderState {
     Pending = 0,
     Placed = 1,
     Done = 2
 }
-export module EnumToString {    
+
+export module Aggregates {
+    export function totalOrderRowValue(orderrows: IOrderRow[]): number {
+        if (!orderrows || orderrows.length < 1)
+            return 0;
+
+        try {
+            return Enumerable.from(orderrows).sum(function (row) {
+                return row.Count
+            });
+        } catch (e) { return 0; }
+
+    }
+}
+
+export module EnumToString {
     export function orderState(state: OrderState): string {
         switch (state) {
             case OrderState.Done:

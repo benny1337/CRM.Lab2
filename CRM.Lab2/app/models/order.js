@@ -3,6 +3,8 @@
 
 var orderSchema = mongoose.Schema({
     UserId: String,
+    UserFullName: String,
+    UserEmail: String,
     Date: Date,
     Status: Number,
     OrderRows: [{ type: mongoose.Schema.Types.Object, ref: 'OrderRow' }]

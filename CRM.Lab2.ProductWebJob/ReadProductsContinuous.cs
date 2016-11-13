@@ -17,19 +17,19 @@ using MongoDB.Bson;
 
 namespace CRM.Lab2.ProductWebJob
 {
-    public class Continuous
+    public class ReadProductsContinuous
     {
 
-        static Continuous()
+        static ReadProductsContinuous()
         {
         }
 
-        public static void StartupJob([TimerTrigger("0 */1 * * * *", RunOnStartup = true)] TimerInfo timerInfo, TextWriter log)
+        public static void StartupJob([TimerTrigger("0 */10 * * * *", RunOnStartup = false)] TimerInfo timerInfo, TextWriter log)
         {
-            Console.WriteLine("continuous started");
+            Console.WriteLine("read products from crm continuously - started");
             var repo = new ProductRepo();
             var db = new Mongo();
-            var prods = repo.Products().Result;
+            var prods = repo.GetProductsAsync().Result;
             
             var collection = db.GetProductCollectionForEdit();
             foreach (var prod in prods)

@@ -14,8 +14,7 @@ namespace CRM.Lab2.ProductWebJob
         private string userName = "crmlab2";
         private string host = "crmlab2.documents.azure.com";
         private string password = "XHymuQ09omwCqAab21KdAqnWANyvS7xGug7v53HqC2LgF9HR9KIpaifblTMvbfRteMHPX1V4oTMog3glpzcG8w==";
-        private string dbName = "admin";
-        private string collectionName = "products";
+        private string dbName = "admin";        
         private IMongoDatabase _db;
 
 
@@ -40,7 +39,12 @@ namespace CRM.Lab2.ProductWebJob
 
         public IMongoCollection<Product> GetProductCollectionForEdit()
         {   
-            return _db.GetCollection<Product>(collectionName);
+            return _db.GetCollection<Product>("products");
+        }
+
+        public IMongoCollection<dynamic> GetOrderCollectionForEdit()
+        {
+            return _db.GetCollection<dynamic>("orders");
         }
     }
 }

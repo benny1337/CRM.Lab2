@@ -275,3 +275,7 @@ a {
     .carttable tr:nth-child(even) {
         background-color: #edf5fc;
     }
+    .order-wrapper{
+        display:flex;
+        flex-direction:column;
+    }

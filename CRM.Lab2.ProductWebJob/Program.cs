@@ -18,7 +18,7 @@ namespace CRM.Lab2.ProductWebJob
             config.UseTimers();
 
             var host = new JobHost(config);
-            host.RunAndBlock();            
+            host.RunAndBlock();          
         }
     }
 }

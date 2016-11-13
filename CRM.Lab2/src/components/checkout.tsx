@@ -32,13 +32,16 @@ class CheckoutDef extends React.Component<IProps, IState> {
     }
 
     placeOrder() {
-        var self = this;
+        var self = this;        
         var o = {
             Date: new Date(),
             OrderRows: self.props.cart,
             Status: Model.OrderState.Pending,
-            UserId: self.props.user.facebook.id
+            UserId: self.props.user.facebook.id,
+            UserFullName: self.props.user.facebook.name,
+            UserEmail: self.props.user.facebook.email,
         } as Model.IOrder;
+        
         self.props.startPlaceingOrder(o);
         self.setState({
             orderwasplacedtext: "Din order är sparad. Du kan se status för alla dina ordrar på 'mina sidor'"
@@ -47,7 +50,6 @@ class CheckoutDef extends React.Component<IProps, IState> {
     render() {
         var self = this;
         var user: any = null;
-        var total = 0;
         if (!this.props.user)
             user = (
                 <div>
@@ -81,8 +83,7 @@ class CheckoutDef extends React.Component<IProps, IState> {
                 </thead>
                 <tbody>
                     {this.props.cart.map(function (row, index) {
-                        var rowprice = row.Count * row.Product.Price;
-                        total += rowprice;
+                        var rowprice = row.Count * row.Product.Price;                        
                         return (
                             <tr key={index}>
                                 <td>{row.Product.Name}</td>
@@ -98,13 +99,13 @@ class CheckoutDef extends React.Component<IProps, IState> {
                         <td colSpan={2}></td>
                         <td style={{
                             textAlign: "right",
-                        }}><Money style={{fontWeight: "bold"}} money={total} /></td>
+                        }}><Money style={{ fontWeight: "bold" }} money={Model.Aggregates.totalOrderRowValue(this.props.cart)} /></td>
                         <td></td>
                     </tr>
                 </tbody>
             </table>
-        );
-        var total = 0;
+        );        
+
         return (
 
             <div style={{

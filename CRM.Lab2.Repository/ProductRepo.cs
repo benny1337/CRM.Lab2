@@ -21,7 +21,7 @@ namespace CRM.Lab2.Repository
             _api = new API().Connection;
         }
 
-        public async Task<IEnumerable<Product>> Products()
+        public async Task<IEnumerable<Product>> GetProductsAsync()
         {
             try
             {

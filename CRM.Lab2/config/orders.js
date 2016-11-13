@@ -5,6 +5,8 @@ var orders = (function () {
     my.save = function (req, res, next) {
         var order = new Order({
             UserId: req.body.UserId,
+            UserFullName: req.body.UserFullName,
+            UserEmail: req.body.UserEmail,
             Date: req.body.Date,
             Status: req.body.Status,
             OrderRows: req.body.OrderRows
