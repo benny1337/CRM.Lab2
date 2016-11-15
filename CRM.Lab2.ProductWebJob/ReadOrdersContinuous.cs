@@ -24,7 +24,7 @@ namespace CRM.Lab2.ProductWebJob
         {
         }
 
-        public static void StartupJob([TimerTrigger("0 */10 * * * *", RunOnStartup = true)] TimerInfo timerInfo, TextWriter log)
+        public static void StartupJob([TimerTrigger("0 */1 * * * *", RunOnStartup = true)] TimerInfo timerInfo, TextWriter log)
         {
             Console.WriteLine("read orders from spa continuously - started");
             var repo = new OrderRepo();

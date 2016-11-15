@@ -29397,7 +29397,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	__webpack_require__(262);
+	const Enumerable = __webpack_require__(262);
 	(function (ErrorSeverity) {
 	    ErrorSeverity[ErrorSeverity["Info"] = 0] = "Info";
 	    ErrorSeverity[ErrorSeverity["MorbidDeathFatalError"] = 1] = "MorbidDeathFatalError";
@@ -29409,22 +29409,22 @@
 	    OrderState[OrderState["Done"] = 2] = "Done";
 	})(exports.OrderState || (exports.OrderState = {}));
 	var OrderState = exports.OrderState;
-	var Aggregates;
-	(function (Aggregates) {
-	    function totalOrderRowValue(orderrows) {
+	class Aggregates {
+	    static totalOrderRowValue(orderrows) {
 	        if (!orderrows || orderrows.length < 1)
 	            return 0;
 	        try {
-	            return Enumerable.from(orderrows).sum(function (row) {
-	                return row.Count;
+	            return Enumerable.from(orderrows).sum((row) => {
+	                return row.Count * row.Product.Price;
 	            });
 	        }
 	        catch (e) {
+	            console.log(e);
 	            return 0;
 	        }
 	    }
-	    Aggregates.totalOrderRowValue = totalOrderRowValue;
-	})(Aggregates = exports.Aggregates || (exports.Aggregates = {}));
+	}
+	exports.Aggregates = Aggregates;
 	var EnumToString;
 	(function (EnumToString) {
 	    function orderState(state) {

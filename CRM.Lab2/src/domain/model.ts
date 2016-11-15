@@ -1,4 +1,4 @@
-﻿import 'linq';
+﻿import * as Enumerable from "linq"
 
 export interface IError {
     severity: ErrorSeverity;
@@ -47,16 +47,16 @@ export enum OrderState {
     Done = 2
 }
 
-export module Aggregates {
-    export function totalOrderRowValue(orderrows: IOrderRow[]): number {
+export class Aggregates {
+    static totalOrderRowValue(orderrows: IOrderRow[]): number {        
         if (!orderrows || orderrows.length < 1)
             return 0;
 
         try {
-            return Enumerable.from(orderrows).sum(function (row) {
-                return row.Count
+            return Enumerable.from(orderrows).sum((row) => {                
+                return row.Count * row.Product.Price;
             });
-        } catch (e) { return 0; }
+        } catch (e) { console.log(e); return 0; }
 
     }
 }
